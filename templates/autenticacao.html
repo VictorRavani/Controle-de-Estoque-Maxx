@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<body class="login-page">
+
+    <div class="container-fluid p-0">
+
+        <div class="bg-login d-flex flex-column justify-content-center align-items-center text-center">
+
+            <h2 class="system-title mb-5">
+                SISTEMA DE MONITORAMENTO DE ORDENS DE PRODUÇÃO
+            </h2>
+
+            <div class="login-card col-md-5 col-lg-4 p-5">
+
+                <h4 class="pb-3">Login</h4>
+
+                <form id="loginForm">
+
+                    <div class="form-group pb-3">
+                        <input type="text" class="form-control form-control-lg"
+                               id="user" placeholder="Usuário" required>
+                    </div>
+
+                    <div class="form-group pb-3 position-relative">
+
+                        <input type="password"
+                            class="form-control form-control-lg pr-5"
+                            id="password"
+                            placeholder="Senha"
+                            required>
+
+                        <i class="fas fa-eye"
+                        id="toggleSenha"
+                        style="
+                                position:absolute;
+                                right:20px;
+                                top:40%;
+                                transform:translateY(-50%);
+                                cursor:pointer;
+                                color:#545b61;
+                        ">
+                        </i>
+
+                    </div>
+
+                    <button type="submit"
+                            class="btn btn-info btn-lg w-100 font-weight-bold mt-2">
+                        Entrar
+                    </button>
+
+                </form>
+
+            </div>
+
+        </div>
+
+        <!-- COPYRIGHT -->
+        <div class="login-footer text-center">
+            © 2026 Aro Estamparia e Ferramentaria Mecânica Ltda.
+        </div>
+
+    </div>
+
+</body>
+
+{% endblock %}
+
+{% block scripts %}
+
+<script>
+
+    /*Login request*/
+    jQuery('#loginForm').on('submit', function (e) {
+        e.preventDefault();
+        jQuery.ajax({
+            url: '/login',
+            type: 'POST',
+            data: { 'user': jQuery('#user').val(), 'password': jQuery('#password').val() },
+            success: function (response) {
+                if (response['Login']) {
+                    jQuery('#message').modal('show');
+                    jQuery('#messageText').text('Login efetuado com sucesso');
+                    setTimeout(function () { jQuery('#message').modal('hide') }, 1500);
+                    location.reload();
+                }
+                else {
+                    jQuery('#message').modal('show');
+                    jQuery('#messageText').text('Usuário e/ou senha incorretos');
+                    setTimeout(function () { jQuery('#message').modal('hide') }, 1500);
+
+                }
+
+            }
+        });
+    });
+
+    function togglePasswordVisibility() {
+        var passwordInput = document.getElementById("password");
+        var eyeIcon = document.getElementById("eye-icon");
+
+        if (passwordInput.type === "password") {
+            passwordInput.type = "text";
+            eyeIcon.classList.remove("fa-eye");
+            eyeIcon.classList.add("fa-eye-slash");
+        } else {
+            passwordInput.type = "password";
+            eyeIcon.classList.remove("fa-eye-slash");
+            eyeIcon.classList.add("fa-eye");
+        }
+    }
+
+$('#toggleSenha').on('click', function(){
+
+    const campoSenha = $('#password');
+
+    if(campoSenha.attr('type') === 'password'){
+
+        campoSenha.attr('type', 'text');
+        $(this).removeClass('fa-eye').addClass('fa-eye-slash');
+
+    } else {
+
+        campoSenha.attr('type', 'password');
+        $(this).removeClass('fa-eye-slash').addClass('fa-eye');
+
+    }
+
+});
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block content %}
+<body class="background-page-default"></body>
+<div class="container-fluid mt-4">
+
+    <h4 class="mb-4 text-center fw-bold">
+        Histórico de Produção
+    </h4>
+
+    <div class="row mb-3">
+
+        <div class="col-md-3">
+            <label>Finalizados a partir de</label>
+            <input type="date" id="data_inicio" class="form-control">
+        </div>
+
+        <div class="col-md-3">
+            <label>Finalizados até</label>
+            <input type="date" id="data_fim" class="form-control">
+        </div>
+
+        <div class="col-md-3 d-flex align-items-end">
+            <button id="filtrar" class="btn btn-primary w-100">
+                Filtrar
+            </button>
+        </div>
+
+        <div class="col-md-3 d-flex align-items-end">
+            <button id="exportarCSV" class="btn btn-success w-100">
+                Exportar CSV
+            </button>
+        </div>
+
+    </div>
+
+    <div class="card bg-light border-info">
+        <div class="card-body p-2">
+
+            <div class="table-responsive">
+                <table class="table table-striped table-hover text-nowrap text-center align-middle"
+                       id="tabela-historico"
+                       style="width:100%;">
+                    <thead></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+var table;
+
+$(document).ready(function () {
+
+    definirDatasPadrao();
+
+    table = $('#tabela-historico').DataTable({
+        ajax: {
+            url: "/dados_historico",
+            dataSrc: "",
+            data: function(d){
+                d.data_inicio = $('#data_inicio').val();
+                d.data_fim = $('#data_fim').val();
+            }
+        },
+
+        language: {
+            url: "/static/js/pt-BR.json" 
+        },
+
+        ordering: false,
+
+        columns: [
+            { data: "numero_op", title: "OP" },
+            { data: "produto", title: "Denominação" },
+            { data: "codigo", title: "Peça Nº" },
+            { data: "quantidade_total_ordem", title: "Quantidade" },
+            { data: "cliente", title: "Cliente" },
+            { data: "data_entrega", title: "Entrega" },
+            { data: "material", title: "Material" },
+            { data: "numero_qualidade", title: "A.Q." },
+            { data: "processo", title: "Processo" },        
+            { data: "status", title: "Status" },
+            { data: "numero_chapa", title: "Chapa" },
+            { data: "iniciado_em", title: "Iniciado" },
+            {
+                data: "chapa_fim",
+                title: "Chapa",
+                render: function(data) {
+                    if (!data) return "-";
+                    return data;
+                }
+            },
+            { data: "finalizado_em", title: "Finalizado" },
+            {
+                data: "quantidade_produzida",
+                title: "Produção",
+                render: function(data) {
+                    if (data === null || data === undefined)
+                        return "0";
+                    return parseInt(data).toLocaleString('pt-BR');
+                }
+            }
+        ],
+
+        createdRow: function (row, data) {
+
+            if (data.id_tratamento == 1) {
+                $(row).addClass('termico');
+            }
+            else if (data.id_tratamento == 2) {
+                $(row).addClass('geral');
+            }
+            else if (data.id_tratamento == 3) {
+                $(row).addClass('amostra');
+            }
+            else if (data.id_tratamento == 4) {
+                $(row).addClass('nao-conforme');
+            }
+        }
+    });
+
+    // BOTÃO FILTRAR
+    $('#filtrar').click(function(){
+
+        table.page('first').draw(false);
+        table.ajax.reload();
+
+    });
+
+});
+
+function definirDatasPadrao(){
+
+    let hoje = new Date();
+    let semanaPassada = new Date();
+
+    semanaPassada.setDate(hoje.getDate() - 7);
+
+    function formatar(data){
+        return data.toISOString().split('T')[0];
+    }
+
+    $('#data_inicio').val(formatar(semanaPassada));
+    $('#data_fim').val(formatar(hoje));
+}
+
+$('#filtrar').click(function(){
+
+    table.ajax.reload();
+
+});
+
+$('#exportarCSV').click(function(){
+
+    let inicio = $('#data_inicio').val();
+    let fim = $('#data_fim').val();
+
+    window.location =
+        "/exportar_historico_csv?data_inicio=" + inicio +
+        "&data_fim=" + fim;
+
+});
+
+</script>
+{% endblock %}

@@ -1,0 +1,737 @@
+{% extends "base.html" %}
+{% block content %}
+<body class="background-page-default"></body>
+<body class="background-page-default" data-user-id="{{ current_user.id }}"></body>
+<div class="container-fluid text-black mt-4">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-4"></div>
+        <div class="col-6 col-lg-4 d-flex align-items-center justify-content-lg-center justify-content-center"><h4>Usuários</h4></div>
+        <div class="col-12 col-lg-4 d-flex align-items-center justify-content-end">
+            <button type="button" class="btn btn-success mx-1" id="botao-adicionar"><i class="fas fa-user-plus"></i> Adicionar</button>
+            <button type="button" class="btn btn-primary mx-1 my-0" id="botao-editar"><i class="fas fa-user-edit"></i> Editar</button>          
+            <button type="button" class="btn btn-danger mx-1 my-0 " id="botao-apagar"><i class="fas fa-trash"></i> Excluir</button>
+        </div>
+    </div>
+
+<!-- Tabela de usuários -->
+    <div class="row d-flex justify-content-center mt-4">
+        <div class="col-12 col-xl-7 px-1 py-1">
+            <div class="card o-hidden h-100 bg-light border-info align-items-center">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table text-black" id="tabela-usuarios"><thead class="thead-default"></thead></table>
+                    </div>
+                </div>   
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Modals -->
+<!-- Editar usuário -->  
+<div class="modal fade" id="editar-modal" tabindex="-1" role="dialog"> 
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Editar usuário</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <form id="editar-formulario">
+
+                    <div class="d-flex justify-content-center mb-3">
+                        <i class="fas fa-user-edit bigIcon"></i>
+                    </div>
+
+                    <input type="hidden" id="editar-id">
+
+                    <!-- Usuário -->
+                    <div class="form-group">
+                        <label for="editar-usuario">Usuário</label>
+                        <input type="text" class="form-control" id="editar-usuario" required>
+                    </div>
+
+                    <!-- Nível -->
+                    <div class="form-group">
+                        <label for="editar-privilegios">Nível de Acesso</label>
+                        <select class="form-control" id="editar-privilegios" required>
+                            <option value="1">Operacional</option>
+                            <option value="2">PCP</option>
+                            <option value="3">Administrador</option>
+                        </select>
+                    </div>
+
+                    <!-- Setor -->
+                    <div class="form-group">
+                        <label for="editar-setor">Setor</label>
+                        <select class="form-control" id="editar-setor">
+                            <option value="" disabled>Selecione</option>
+                            <option value="materia_prima">Matéria-prima</option>
+                            <option value="estamparia">Estamparia</option>
+                            <option value="solda">Solda</option>
+                            <option value="retifica">Retífica</option>
+                            <option value="envio_terceiros">Envio para terceiros</option>
+                            <option value="recebimento_terceiros">Recebimentos (terceiros)</option>
+                            <option value="inspecao_final">Inspeção final</option>
+                            <option value="expedicao">Expedição</option>
+                        </select>
+                    </div>
+
+                    <div class="border-top my-3"></div>
+
+                    <!-- Nova senha -->
+                    <div class="form-group position-relative">
+                        <label for="editar-nova-senha">Nova senha</label>
+
+                        <input type="password"
+                            class="form-control pr-5"
+                            id="editar-nova-senha">
+
+                        <i class="fas fa-eye"
+                        id="toggleNovaSenha"
+                        style="
+                                position:absolute;
+                                right:15px;
+                                top:43px;
+                                cursor:pointer;
+                                color:#545b61;
+                        ">
+                        </i>
+                    </div>
+
+                    <!-- Confirmar senha -->
+                    <div class="form-group position-relative">
+                        <label for="editar-confirmar-senha">Confirmar senha</label>
+
+                        <input type="password"
+                            class="form-control pr-5"
+                            id="editar-confirmar-senha">
+
+                        <i class="fas fa-eye"
+                        id="toggleConfirmarSenha"
+                        style="
+                                position:absolute;
+                                right:15px;
+                                top:43px;
+                                cursor:pointer;
+                                color:#545b61;
+                        ">
+                        </i>
+                    </div>
+
+                    <div class="text-center">
+                        <span class="formErrorMsg text-danger" id="editarSenhaErro"></span>
+                    </div>
+
+                    <button type="submit" class="btn btn-info mt-3 w-100">
+                        Salvar
+                    </button>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Adicionar usuário -->
+<div class="modal fade" id="adicionar-modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Adicionar usuário</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <form id="adicionar-formulario">
+
+                    <div class="d-flex justify-content-center mb-3">
+                        <i class="fas fa-user-plus bigIcon"></i>
+                    </div>
+
+                    <!-- Usuário -->
+                    <div class="form-group">
+                        <label for="adicionar-usuario">Usuário</label>
+                        <input type="text" class="form-control" id="adicionar-usuario" required>
+                        <span class="formErrorMsg text-danger" id="adicionar-login-erro"></span>
+                    </div>
+
+                    <!-- Nível -->
+                    <div class="form-group">
+                        <label for="adicionar-privilegios">Nível de Acesso</label>
+                        <select class="form-control" id="adicionar-privilegios" required>
+                            <option value="1">Operacional</option>
+                            <option value="2">PCP</option>
+                            <option value="3">Administrador</option>
+                        </select>
+                    </div>
+
+                    <!-- Setor -->
+                    <div class="form-group">
+                        <label for="adicionar-setor">Setor</label>
+                        <select class="form-control" id="adicionar-setor" disabled>
+                            <option value="" disabled selected>Selecione</option>
+                            <option value="materia_prima">Matéria-prima</option>
+                            <option value="estamparia">Estamparia</option>
+                            <option value="solda">Solda</option>
+                            <option value="retifica">Retífica</option>
+                            <option value="envio_terceiros">Envio para terceiros</option>
+                            <option value="recebimento_terceiros">Recebimentos (terceiros)</option>
+                            <option value="inspecao_final">Inspeção final</option>
+                            <option value="expedicao">Expedição</option>
+                        </select>
+                    </div>
+
+                    <div class="border-top my-3"></div>
+
+                    <!-- Senha -->
+                    <div class="form-group position-relative">
+                        <label for="adicionar-senha">Senha</label>
+
+                        <input type="password"
+                            class="form-control pr-5"
+                            id="adicionar-senha"
+                            required>
+
+                        <i class="fas fa-eye"
+                        id="toggleAdicionarSenha"
+                        style="
+                                position:absolute;
+                                right:15px;
+                                top:43px;
+                                cursor:pointer;
+                                color:#545b61;
+                        ">
+                        </i>
+                    </div>
+
+                    <!-- Confirmar -->
+                    <div class="form-group">
+                        <div class="form-group position-relative">
+                            <label for="adicionar-confirmar-senha">Confirmar senha</label>
+
+                            <input type="password"
+                                class="form-control pr-5"
+                                id="adicionar-confirmar-senha"
+                                required>
+
+                            <i class="fas fa-eye"
+                            id="toggleAdicionarConfirmarSenha"
+                            style="
+                                    position:absolute;
+                                    right:15px;
+                                    top:43px;
+                                    cursor:pointer;
+                                    color:#545b61;
+                            ">
+                            </i>
+                        </div>
+                    </div>
+
+                    <div class="text-center">
+                        <span class="formErrorMsg text-danger" id="adicionarSenhaErro"></span>
+                    </div>
+
+                    <button type="submit" class="btn btn-info mt-3 w-100">
+                        Salvar
+                    </button>
+
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmação para apagar usuário -->
+<div class="modal fade" id="mensagem-apagar" tabindex="-1" role="dialog"> 
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+            <div class="modal-body text-center">Apagar usuário?<button class="btn btn-info my-2 w-100" id="botao-confirmacao">Confirmar</button></div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+{% block scripts %}
+
+<script>
+
+    /* Criação da Tabela */
+    var table = $('#tabela-usuarios').DataTable({
+        ajax: {
+            url: '/usuarios',
+            dataSrc: 'users'
+        },
+        language: {
+            url: "/static/js/pt-BR.json"
+        },
+        pageLength: 10,
+        bLengthChange: false,
+        bFilter: true,
+
+        columnDefs: [
+            { className: "text-center", targets: "_all" }
+        ],
+
+        columns: [
+            { 
+                data: "usuario", 
+                title: "Usuário",
+            },
+
+            {
+                data: "setor",
+                title: "Setor",
+                render: function(data, type) {
+
+                    if (type === 'display') {
+
+                        if(data === null || data === undefined || data === ""){
+                            return "-";
+                        }
+
+                        var setores = {
+                            "materia_prima": "Matéria-prima",
+                            "estamparia": "Estamparia",
+                            "solda": "Solda",
+                            "retifica": "Retífica",
+                            "envio_terceiros": "Envio para terceiros",
+                            "recebimento_terceiros": "Recebimentos (terceiros)",
+                            "inspecao_final": "Inspeção final",
+                            "expedicao": "Expedição"
+                        };
+
+                        return setores[data] || data;
+                    }
+
+                    return data;
+                }
+            },
+
+            {
+                data: "privilegio",
+                title: "Nível Acesso",
+                render: function(data, type) {
+
+                    if (type === 'display') {
+
+                        var niveis = {
+                            1: "Operacional",
+                            2: "PCP",
+                            3: "Administrador"
+                        };
+
+                        return niveis[data] || "Desconhecido";
+                    }
+
+                    return data;
+                }
+            }
+        ]
+    });
+
+    /* Seleção de linha */
+    $('#tabela-usuarios').on('click', 'tbody tr', function () {
+
+        var row = table.row(this);
+
+        if (!row.data()) return;
+
+        if ($(this).hasClass('tableSelected')) {
+            $(this).removeClass('tableSelected');
+        } else {
+      
+            table.$('tr.tableSelected').removeClass('tableSelected');
+            $(this).addClass('tableSelected');
+        }
+
+    });
+
+    /*New user*/
+    jQuery('#botao-adicionar').on('click', function(e){
+        jQuery('#adicionar-modal').modal('show');
+    });
+    
+    jQuery('#adicionar-usuario').on('blur', function(){
+
+        var usuario = jQuery('#adicionar-usuario').val();
+
+        if(!usuario) return;
+
+        jQuery.ajax({
+            url: '/usuariodisponivel',
+            type: 'GET',
+            data: { usuario: usuario },
+
+            success: function(response){
+
+                if(response.available){
+
+                    jQuery('#adicionar-login-erro').text('');
+                    //msgSucesso("Usuário disponível.");
+
+                }
+                else{
+
+                    jQuery('#adicionar-login-erro').text('Usuário já existente');
+                    jQuery('#adicionar-usuario').val('');
+
+                    msgErro("Este usuário já está cadastrado.");
+
+                }
+
+            },
+
+            error: function(){
+
+                msgErro("Erro ao verificar disponibilidade do usuário.");
+
+            }
+
+        });
+
+    });
+    
+    $('#adicionar-formulario').on('submit', function(e){
+
+        e.preventDefault();
+
+        var senha = $('#adicionar-senha').val();
+        var confirmar = $('#adicionar-confirmar-senha').val();
+        var nivel = $('#adicionar-privilegios').val();
+        var setor = $('#adicionar-setor').val();
+
+        $('#adicionarSenhaErro').text('');
+        $('#adicionar-login-erro').text('');
+
+        // verificar senha
+        if(senha !== confirmar){
+            $('#adicionarSenhaErro').text("As senhas não conferem!.").css('font-size', '18px');
+            return;
+        }
+
+        // valida setor
+        if (nivel == "1" && (!setor || setor === "")) {
+            $('#adicionar-login-erro').text("Selecione um setor para usuário operacional.");
+            return;
+        }
+
+        $.ajax({
+            url: '/adicionar_usuario',
+            type: 'POST',
+            data: {
+                usuario: $('#adicionar-usuario').val(),
+                setor: setor,
+                privilegios: nivel,
+                senha: senha,
+                senha: $('#adicionar-senha').val(),
+                confirmar_senha: $('#adicionar-confirmar-senha').val()
+            },
+
+            success: function(response){
+
+                if(response.success){
+
+                    $('#adicionar-modal').modal('hide');
+
+                    table.ajax.reload(null,false);
+
+                    msgSucesso("Usuário cadastrado com sucesso.");
+
+                } else {
+
+                    msgErro(response.error);
+
+                }
+
+            },
+
+            error: function(){
+                msgErro("Erro ao comunicar com o servidor.");
+            }
+        });
+
+    });
+
+    $('#adicionar-confirmar-senha').on('input', function(){
+
+        var senha = $('#adicionar-senha').val();
+        var confirmar = $(this).val();
+
+        if(senha !== confirmar){
+            $('#adicionarSenhaErro').text("As senhas não conferem!!").css('font-size', '18px');
+        } else {
+            $('#adicionarSenhaErro').text("");
+        }
+
+    });
+
+    /*Edit user*/
+    $('#botao-editar').on('click', function(){
+
+        var selectedRow = table.row('.tableSelected');
+
+        if(!selectedRow.data()){
+            alert("Selecione um usuário.");
+            return;
+        }
+
+        var data = selectedRow.data();
+
+        $('#editar-id').val(data.id);
+        $('#editar-usuario').val(data.usuario);
+        $('#editar-setor').val(data.setor);
+        $('#editar-privilegios').val(data.privilegio);
+
+        $('#editar-nova-senha').val('');
+        $('#editar-confirmar-senha').val('');
+        $('#editarSenhaErro').text('');
+
+        $('#editar-modal').modal('show');
+
+    });
+
+    jQuery('#editar-formulario').on('submit', function(e){
+
+        e.preventDefault();
+
+        jQuery.ajax({
+            url: '/usuarios',
+            type: 'PUT',
+            data: {
+                id: jQuery('#editar-id').val(),
+                usuario: jQuery('#editar-usuario').val(),
+                setor: jQuery('#editar-setor').val(),
+                privilegios: jQuery('#editar-privilegios').val(),
+                novaSenha: jQuery('#editar-nova-senha').val()
+            }, 
+
+            success: function(response){
+
+                if(response.success){
+
+                    jQuery('#editar-modal').modal('hide');
+
+                    table.ajax.reload(null,false);
+
+                    msgSucesso("Usuário modificado com sucesso.");
+
+                } else {
+
+                    msgErro(response.error || "Erro ao atualizar usuário.");
+
+                }
+
+            },
+
+            error: function(){
+
+                msgErro("Erro ao comunicar com o servidor.");
+
+            }
+
+        });
+
+    });
+
+    jQuery('#editar-confirmar-senha').on('blur', function () {
+
+        if (jQuery('#editar-nova-senha').val() !== jQuery('#editar-confirmar-senha').val()) {
+            jQuery('#editar-confirmar-senha').val('');
+            jQuery('#editarSenhaErro').text('As senhas não conferem!').css('font-size', '18px');
+        } else {
+            jQuery('#editarSenhaErro').text('');
+        }
+
+    });   
+
+    /* Delete user */ 
+    $('#botao-apagar').on('click', function(){
+
+        var selectedRow = table.row('.tableSelected');
+
+        if (!selectedRow.data()) {
+            alert("Selecione um usuário.");
+            return;
+        }
+
+        $('#mensagem-apagar').modal('show');
+
+    });
+
+const usuarioLogadoId = document.body.dataset.userId;
+
+jQuery('#botao-confirmacao').on('click', function(e){
+
+    var selectedRow = table.row('.tableSelected');
+    var data = selectedRow.data();
+
+    // impede auto exclusão
+    if(Number(data.id) === Number(usuarioLogadoId)){
+
+        msgErro("Não é possível excluir o próprio usuário.");
+
+        jQuery('#mensagem-apagar').modal('hide');
+        return;
+    }
+
+    jQuery('#mensagem-apagar').modal('hide');
+
+    $.ajax({
+        url: '/usuarios',
+        type: 'DELETE',
+        data: { id: data.id },
+
+        success: function(response){
+
+            if(response.deleted){
+
+                msgSucesso("Usuário removido com sucesso.");
+                table.ajax.reload(null,false);
+
+            } else {
+
+                msgErro("Erro ao remover usuário.");
+            }
+
+        },
+
+        error: function(){
+            msgErro("Erro ao comunicar com o servidor.");
+        }
+    });
+
+});
+
+
+// Bloqueio de campo
+$('#adicionar-privilegios').on('change', function () {
+
+    var nivel = $(this).val();
+    var setorSelect = $('#adicionar-setor');
+
+    if (nivel == "1") {
+        // Operacional → setor obrigatório
+        setorSelect.prop('disabled', false);
+        setorSelect.prop('required', true);
+    } else {
+        // PCP ou Admin → desabilita e limpa
+        setorSelect.val('');
+        setorSelect.prop('disabled', true);
+        setorSelect.prop('required', false);
+    }
+});
+
+// Aplicar regra quando abrir o modal 
+// Operacional → setor obrigatório 
+// PCP / Admin → setor desabilitado
+$('#adicionar-modal').on('shown.bs.modal', function () {
+    $('#adicionar-privilegios').trigger('change');
+});
+
+$('#editar-privilegios').on('change', function () {
+
+    var nivel = $(this).val();
+    var setorSelect = $('#editar-setor');
+
+    if (nivel == "1") {
+        // Operacional → setor obrigatório
+        setorSelect.prop('disabled', false);
+        setorSelect.prop('required', true);
+    } else {
+        // PCP ou Admin → desabilita e limpa
+        setorSelect.val('');
+        setorSelect.prop('disabled', true);
+        setorSelect.prop('required', false);
+    }
+});
+
+//limpar setor ao abrir o modal
+$('#adicionar-modal').on('show.bs.modal', function(){
+
+    $('#adicionar-formulario')[0].reset();
+
+    $('#adicionar-setor')
+        .val('')
+        .prop('disabled', true)
+        .prop('required', false);
+
+});
+
+// Quando abrir o modal já aplica regra
+$('#editar-modal').on('shown.bs.modal', function () {
+    $('#editar-privilegios').trigger('change');
+});
+
+// Validação no submit
+$('#editar-formulario').on('submit', function (e) {
+
+    var nivel = $('#editar-privilegios').val();
+    var setor = $('#editar-setor').val();
+
+    if (nivel == "1" && (!setor || setor === "")) {
+        e.preventDefault();
+        alert("Para usuário Operacional é obrigatório selecionar um setor.");
+        return false;
+    }
+
+    var senha = $('#editar-nova-senha').val();
+    var confirmar = $('#editar-confirmar-senha').val();
+
+    if (senha !== confirmar) {
+        e.preventDefault();
+        $('#editarSenhaErro').text("As senhas não conferem!.").css('font-size', '18px');
+        return false;
+    }
+});
+
+function toggleSenha(toggleId, inputId){
+
+    const toggle = document.getElementById(toggleId);
+    const campo = document.getElementById(inputId);
+
+    if(!toggle || !campo) return;
+
+    toggle.addEventListener("click", function(){
+
+        if(campo.type === "password"){
+            campo.type = "text";
+            this.classList.remove("fa-eye");
+            this.classList.add("fa-eye-slash");
+        } else {
+            campo.type = "password";
+            this.classList.remove("fa-eye-slash");
+            this.classList.add("fa-eye");
+        }
+
+    });
+
+}
+
+toggleSenha("toggleNovaSenha", "editar-nova-senha");
+toggleSenha("toggleConfirmarSenha", "editar-confirmar-senha");
+toggleSenha("toggleAdicionarSenha", "adicionar-senha");
+toggleSenha("toggleAdicionarConfirmarSenha", "adicionar-confirmar-senha");
+
+
+$(document).on('click', function(e){
+
+    if (!$(e.target).closest('#tabela-usuarios').length) {
+
+        table.$('tr.tableSelected').removeClass('tableSelected');
+
+    }
+
+});
+
+</script>
+{% endblock %}

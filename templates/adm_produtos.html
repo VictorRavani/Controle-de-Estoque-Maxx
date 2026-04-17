@@ -1,0 +1,768 @@
+{% extends "base.html" %}
+{% block content %}
+
+<body class="background-page-default"></body>
+
+<!-- BOTÕES DA TELA E TABELA -->
+<div class="container-fluid text-black mt-4">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-4"></div>
+
+        <div class="col-6 col-lg-4 d-flex align-items-center justify-content-center">
+            <h4>Produtos</h4>
+        </div>
+
+        <div class="col-12 col-lg-4 d-flex align-items-center justify-content-end">
+
+            <button type="button" class="btn btn-custom mx-1" id="botao-registrar_saida">
+                <i class="fas fa-arrow-up"></i> Registrar saída
+            </button>
+
+            <button type="button" class="btn btn-success mx-1" id="botao-adicionar-produto">
+                <i class="fas fa-plus"></i> Adicionar
+            </button>
+
+            <button type="button" class="btn btn-primary mx-1" id="botao-editar-produto">
+                <i class="fas fa-edit"></i> Editar
+            </button>
+
+            <button type="button" class="btn btn-info mx-1" id="botao-historico">
+                <i class="fas fa-history"></i> Histórico
+            </button>
+
+            <button type="button" class="btn btn-danger mx-1" id="botao-apagar-produto">
+                <i class="fas fa-trash"></i> Excluir
+            </button>
+
+        </div>
+    </div>
+
+    <div class="row justify-content-center mt-4">
+        <div class="col-12 col-xl-7 px-1 py-1">
+            <div class="card bg-light border-info">
+                <div class="card-body">
+
+                    <div class="table-responsive">
+                        <table class="table text-black text-center" id="tabela-produtos"></table>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+<!-- MODAL ADICIONAR PRODUTO -->
+<div class="modal fade" id="modal-adicionar-produto">
+    <div class="modal-dialog"> 
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Adicionar Produto</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <form id="form-adicionar-produto">
+
+                    <div class="form-group">
+                        <label>Descrição</label>
+                        <input type="text" class="form-control" id="produto-nome" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Código</label>
+                        <input type="text" class="form-control" id="produto-codigo" required>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 form-group">
+                            <label>Saldo Inicial</label>
+                            <input type="number" class="form-control" id="produto-saldo" step="1" min="0" required>
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label>Estoque Mínimo</label>
+                            <input type="number" class="form-control" id="produto-estoque-minimo" step="1" min="0" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-info w-100 mt-3">
+                        Salvar
+                    </button>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editar-modal">
+    <div class="modal-dialog"> 
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Produto</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+
+                <form id="editar-formulario">
+
+                    <input type="hidden" id="editar-id">
+
+                    <div class="form-group">
+                        <label>Descrição</label>
+                        <input type="text" class="form-control" id="editar-nome" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Código</label>
+                        <input type="text" class="form-control" id="editar-codigo" required>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 form-group">
+                            <label>Saldo</label>
+                            <input type="number" class="form-control" id="editar-saldo" step="1" min="0" required>
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label>Estoque Mínimo</label>
+                            <input type="number" class="form-control" id="editar-estoque-minimo" step="1" min="0" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 mt-3">
+                        Atualizar
+                    </button>
+
+                </form>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="registrar-saida-modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Registrar Saída de Estoque</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <form id="formulario-registrar-saida">
+
+                    <div class="text-center mb-4">
+                        <div class="mb-3">
+                            <i class="fas fa-box-open fa-3x text-warning"></i>
+                        </div>
+
+                        <div class="d-flex justify-content-center gap-2">
+                            <button type="button" class="btn btn-success btn-sm mr-2" id="botao-scan-barcode-saida">
+                                <i class="fas fa-barcode"></i> Ler Código de Barras
+                            </button>
+                            <button type="button" class="btn btn-primary btn-sm mr-2" id="botao-manual-saida">
+                                <i class="fas fa-keyboard"></i> Manual
+                            </button>
+                            <button type="button" class="btn btn-danger btn-sm" id="botao-limpar-form-saida">
+                                <i class="fas fa-trash-alt"></i> Limpar
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-4">
+                        <label for="saida_id_produto" class="font-weight-bold text-secondary">Produto Selecionado:</label>
+                        <select class="form-control" id="saida_id_produto" name="id_produto" required disabled>
+                            <option value="">Aguardando seleção do método...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group row mb-4">
+                        <label for="saida_quantidade" class="col-4 col-form-label font-weight-bold text-secondary">Quantidade:</label>
+                        <div class="col-8">
+                            <input type="number" class="form-control" id="saida_quantidade" name="quantidade" step="1" min="1" required>
+                        </div>
+                    </div>
+
+                    <div class="text-right mt-3 border-top pt-3">
+                        <button type="submit" class="btn btn-success px-4">Confirmar Saída</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL HISTÓRICO DE MOVIMENTAÇÕES -->
+<div class="modal fade" id="modal-historico" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-history"></i> Histórico de Movimentações</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table id="tabela-historico" class="table table-striped table-bordered" style="width:100%">
+                        </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+{% block scripts %}
+
+<script>
+
+// Tabela
+var table = $('#tabela-produtos').DataTable({
+
+    ajax: {
+        url: '/produtos',
+        dataSrc: function (json) {
+            var listaDeProdutos = json.produtos ? json.produtos : json;
+            
+            // 1. Filtra os ativos
+            var produtosFiltrados = listaDeProdutos.filter(function(produto) {
+                return produto.ativo === true || produto.ativo === 1 || produto.ativo === "t"; 
+            });
+
+            // 2. Calcula a proporção para a nossa ordenação mágica
+            produtosFiltrados.forEach(function(produto) {
+                var saldo = parseFloat(produto.saldo) || 0;
+                var estoqueMinimo = parseFloat(produto.estoque_minimo) || 0;
+
+                // Prevenção contra divisão por zero (se não tem estoque mínimo, jogamos para o final da fila/verde)
+                if (estoqueMinimo === 0) {
+                    produto.indice_ordenacao = 999999; 
+                } else {
+                    // Aqui nascem os seus 90% (0.90) ou 99% (0.99)
+                    produto.indice_ordenacao = saldo / estoqueMinimo; 
+                }
+            });
+
+            return produtosFiltrados;
+        }
+    },
+
+    pageLength: 10,
+    lengthChange: false,
+
+    language: {
+        url: "/static/js/pt-BR.json"
+    },
+
+    // 3. Força a tabela a nascer ordenada pela coluna de índice 3 (que é a nossa invisível), ordem crescente (asc)
+    order: [[4, 'asc']], 
+
+columns: [
+        { data: "nome", title: "Nome" },           // Índice 0
+        { data: "codigo", title: "Código" },       // Índice 1
+        { 
+            data: "saldo", 
+            title: "Saldo",
+            // O render formata o visual apenas na hora de desenhar na tela (display)
+            render: function (data, type, row) {
+                if (data !== null) {
+                    var numero = parseFloat(data);
+                    return isNaN(numero) ? data : numero; 
+                }
+                return data;
+            }
+        },
+        { 
+            data: "estoque_minimo", 
+            title: `Estoque Mínimo
+                    <i class="fas fa-question-circle text-info" 
+                       style="cursor: help;" 
+                       title="Regras de Cores:&#10;🔴 Crítico: Saldo menor que o Mínimo.&#10;🟡 Atenção: Saldo entre o Mínimo e +50% de margem.&#10;🟢 OK: Saldo acima da margem de 50%.">
+                    </i>`,
+            // Aplicamos a mesma regra para o estoque mínimo
+            render: function (data, type, row) {
+                if (data !== null) {
+                    var numero = parseFloat(data);
+                    return isNaN(numero) ? data : numero; 
+                }
+                return data;
+            }
+        },
+        // 4. A COLUNA INVISÍVEL
+        { data: "indice_ordenacao", visible: false } // Índice 3
+    ],
+
+    // 5. A pintura das linhas (continua igual)
+    rowCallback: function(row, data, displayNum, displayIndex, dataIndex) {
+        var saldo = parseFloat(data.saldo) || 0;
+        var estoqueMinimo = parseFloat(data.estoque_minimo) || 0;
+        var margemCinquentaPorcento = estoqueMinimo * 1.5;
+
+        // Resetar a cor antes de aplicar a nova (importante para atualizações)
+        $(row).css('background-color', '');
+
+        if (saldo < estoqueMinimo) {
+            $(row).css('background-color', '#ffdddd'); // Vermelho (Crítico)
+        } 
+        else if (saldo <= margemCinquentaPorcento) {
+            $(row).css('background-color', '#fff3cd'); // Amarelo (Atenção)
+        } 
+        else {
+            $(row).css('background-color', '#d4edda'); // Verde (OK)
+        }
+    }
+});
+
+// O código de clique na linha continua igual
+$('#tabela-produtos').on('click', 'tbody tr', function () {
+    var row = table.row(this);
+    if (!row.data()) return;
+
+    table.$('tr.tableSelected').removeClass('tableSelected');
+    $(this).addClass('tableSelected');
+});
+
+// Evento para desmarcar ao clicar fora da tabela
+$(document).on('click', function (e) {
+    // Verifica se o elemento clicado NÃO faz parte da #tabela-produtos
+    if ($(e.target).closest('#tabela-produtos').length === 0) {
+        // Se foi fora da tabela, remove a classe da linha selecionada
+        $('#tabela-produtos tbody tr.tableSelected').removeClass('tableSelected');
+    }
+});
+
+/* ABRIR MODAL ADICIONAR */
+$('#botao-adicionar-produto').click(function(){
+
+    $('#modal-adicionar-produto').modal('show');
+
+});
+
+/* ADICIONAR PRODUTO */
+$('#form-adicionar-produto').submit(function(e){
+
+    e.preventDefault();
+
+    $.post('/produtos', {
+
+        nome: $('#produto-nome').val(),
+        codigo: $('#produto-codigo').val(),
+        
+        // campos adicionados
+        saldo: $('#produto-saldo').val(),
+        estoque_minimo: $('#produto-estoque-minimo').val()
+
+    }, function(response){
+
+        if(response.success){
+
+            $('#modal-adicionar-produto').modal('hide');
+            table.ajax.reload(null,false);
+
+            // Limpa todos os 4 campos para o próximo cadastro
+            $('#produto-nome').val('');
+            $('#produto-codigo').val('');
+            $('#produto-saldo').val('');
+            $('#produto-estoque-minimo').val('');
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Operação concluída',
+                text: 'Produto cadastrado com sucesso.',
+                timer: 1500,
+                showConfirmButton: false
+            });
+
+        } else {
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: response.error
+            });
+
+        }
+
+    });
+
+});
+
+/* EDITAR PRODUTO */
+$('#botao-editar-produto').click(function(){
+
+    var selectedRow = table.row('.tableSelected');
+
+    if(!selectedRow.data()){
+        Swal.fire({
+            icon: 'error',
+            title: 'Erro',
+            text: 'Selecione um produto.'
+        });
+        return;
+    }
+
+    var data = selectedRow.data();
+
+    // Preenche os campos do formulário com os dados da linha selecionada
+    $('#editar-id').val(data.id);
+    $('#editar-nome').val(data.nome);
+    $('#editar-codigo').val(data.codigo);
+    
+    // 👇 ADICIONADO: Puxa o saldo e o estoque mínimo
+    $('#editar-saldo').val(parseFloat(data.saldo) || 0);
+    $('#editar-estoque-minimo').val(parseFloat(data.estoque_minimo) || 0);
+
+    $('#editar-modal').modal('show');
+
+});
+
+$('#editar-formulario').submit(function(e){
+
+    e.preventDefault();
+
+    $.ajax({
+
+        url: '/produtos',
+        type: 'PUT',
+
+        data: {
+
+            id: $('#editar-id').val(),
+            nome: $('#editar-nome').val(),
+            codigo: $('#editar-codigo').val(),
+            
+            // 👇 ADICIONADO: Envia o saldo e estoque mínimo atualizados para o Python
+            saldo: $('#editar-saldo').val(),
+            estoque_minimo: $('#editar-estoque-minimo').val()
+
+        },
+
+        success: function(response){
+
+            if(response.success){
+
+                $('#editar-modal').modal('hide');
+
+                table.ajax.reload(null,false);
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Operação concluída',
+                    text: 'Produto atualizado com sucesso.',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+
+            } else {
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: response.error
+                });
+
+            }
+
+        }
+
+    });
+
+});
+
+/* INATIVAR PRODUTO (Soft Delete) */
+$('#botao-apagar-produto').click(function(){
+
+    var selectedRow = table.row('.tableSelected');
+
+    if(!selectedRow.data()){
+        Swal.fire('Atenção', 'Selecione um produto na tabela primeiro.', 'warning');
+        return;
+    }
+
+    var data = selectedRow.data();
+
+    Swal.fire({
+        title: 'Tem certeza?',
+        text: "O produto '" + data.nome + "' será inativado. Seu histórico no estoque será mantido intacto.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sim, inativar!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            
+            $.ajax({
+                url: '/produtos', // Aponta para a rota principal
+                type: 'DELETE',   // Aciona o bloco DELETE que atualiza o status
+                data: { id: data.id },
+                success: function(response){
+                    if(response.success){
+                        table.ajax.reload(null, false);
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Inativado!',
+                            text: 'O produto foi inativado com sucesso.',
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+                    } else {
+                        Swal.fire('Erro', response.error, 'error');
+                    }
+                }
+            });
+        }
+    });
+});
+
+/* REGISTRAR SAIDA */
+/* ==========================================
+   LÓGICA DO MODAL DE SAÍDA DE ESTOQUE
+   ========================================== */
+
+// Função auxiliar para resetar a caixa de seleção
+function resetarSelectProduto() {
+    // Se o Select2 estiver ativo, nós o destruímos para voltar ao normal
+    if ($('#saida_id_produto').hasClass("select2-hidden-accessible")) {
+        $('#saida_id_produto').select2('destroy');
+    }
+    $('#saida_id_produto').empty().append('<option value="">Aguardando seleção do método...</option>');
+    $('#saida_id_produto').prop('disabled', true);
+}
+
+// 1. Abrir o modal
+$('#botao-registrar_saida').click(function(){
+    $('#formulario-registrar-saida')[0].reset();
+    resetarSelectProduto();
+    $('#registrar-saida-modal').modal('show');
+});
+
+// 2. Botão de Ler Código de Barras
+$('#botao-scan-barcode-saida').click(function() {
+    let codigo = prompt("Aguardando leitura do código de barras...");
+    if (codigo) { processarCodigoBarrasSaida(codigo); }
+});
+
+// 3. Botão de Lista Manual (TURBINADO COM SELECT2)
+$('#botao-manual-saida').click(function() {
+    
+    $('#saida_id_produto').empty().append('<option value="">Carregando produtos...</option>');
+    
+    $.ajax({
+        url: '/produtos',
+        type: 'GET',
+        success: function(response){
+            
+            $('#saida_id_produto').empty().append('<option value="">Digite o nome ou código...</option>');
+            
+            var produtos = response.produtos;
+            produtos.forEach(function(produto) {
+                if (produto.ativo === true || produto.ativo === 1 || produto.ativo === "t") {
+                    // Como estamos juntando "Código — Nome", o Select2 vai pesquisar nos dois automaticamente!
+                    $('#saida_id_produto').append(new Option(produto.codigo + " — " + produto.nome, produto.id));
+                }
+            });
+
+            $('#saida_id_produto').prop('disabled', false);
+            
+            // 🔥 Transforma o select normal em um pesquisável
+            $('#saida_id_produto').select2({
+                dropdownParent: $('#registrar-saida-modal'), // Essencial para a pesquisa funcionar dentro de modais do Bootstrap
+                width: '100%',
+                language: "pt-BR" // Deixa os avisos em português
+            });
+
+            // Já abre a caixinha de pesquisa automaticamente para o usuário não precisar clicar duas vezes
+            $('#saida_id_produto').select2('open');
+
+        },
+        error: function(){
+            Swal.fire('Erro', 'Falha ao carregar a lista de produtos.', 'error');
+            resetarSelectProduto();
+        }
+    });
+});
+
+// 4. Botão Limpar
+$('#botao-limpar-form-saida').click(function() {
+    $('#formulario-registrar-saida')[0].reset();
+    resetarSelectProduto();
+});
+
+// 4. Função que "fatia" o código de barras e busca o produto
+function processarCodigoBarrasSaida(codigo) {
+    if (codigo.length !== 36) {
+        Swal.fire('Erro', 'Código de barras inválido. Verifique a leitura.', 'warning');
+        return;
+    }
+
+    let codigo_produto = codigo.substring(16, 28).replace(/^0+/, '');
+
+    $.ajax({
+        url: '/produto_por_codigo',
+        type: 'GET',
+        data: { codigo: codigo_produto },
+        success: function(response){
+            if(response.success){
+                
+                // 🔥 CORREÇÃO 1: Garante que vai pegar o ID correto, seja qual for o nome da variável que seu Python envia!
+                let idCorreto = response.id_produto || response.id;
+
+                $('#saida_id_produto').prop('disabled', false);
+                $('#saida_id_produto')
+                    .empty()
+                    .append(new Option(codigo_produto + " — " + response.nome, idCorreto, true, true))
+                    .trigger('change');
+
+                $('#saida_quantidade').focus();
+
+            } else {
+                Swal.fire('Não Encontrado', 'O produto bipado não foi encontrado no sistema.', 'error');
+            }
+        },
+        error: function(){
+            Swal.fire('Erro', 'Falha ao consultar o produto no servidor.', 'error');
+        }
+    });
+}
+
+// 5. Enviar o formulário para o Backend (Registrar a Saída)
+$('#formulario-registrar-saida').submit(function(e){
+    e.preventDefault();
+
+    let idProduto = $('#saida_id_produto').val();
+    let quantidade = $('#saida_quantidade').val();
+    
+    // Captura o texto do item selecionado (Ex: "1234 — Parafuso")
+    let nomeProduto = $('#saida_id_produto option:selected').text(); 
+
+    if(!idProduto) {
+        Swal.fire('Atenção', 'Selecione ou bipe um produto primeiro.', 'warning');
+        return;
+    }
+
+    if(quantidade <= 0) {
+        Swal.fire('Atenção', 'A quantidade deve ser maior que zero.', 'warning');
+        return;
+    }
+
+    // 🔥 NOVA TELA DE CONFIRMAÇÃO ANTES DE SALVAR 🔥
+    Swal.fire({
+        title: 'Confirmar Saída?',
+        html: `Você tem certeza que deseja registrar a saída de <b>${quantidade}</b> unidade(s) de:<br><br><span class="text-info">${nomeProduto}</span>?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745', // Verde para confirmar
+        cancelButtonColor: '#d33',     // Vermelho para cancelar
+        confirmButtonText: '<i class="fas fa-check"></i> Sim, confirmar!',
+        cancelButtonText: '<i class="fas fa-times"></i> Cancelar'
+    }).then((result) => {
+        
+        // Só entra aqui se o usuário clicou no botão verde (Sim)
+        if (result.isConfirmed) {
+            
+            $.ajax({
+                url: '/registrar_movimentacao', 
+                type: 'POST', 
+                data: {
+                    id_produto: idProduto,
+                    quantidade: quantidade,
+                    operacao: 1 // 1 para SAÍDA
+                },
+                success: function(response){
+                    if(response.success){
+                        $('#registrar-saida-modal').modal('hide');
+                        table.ajax.reload(null, false);
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Saída Registrada',
+                            text: 'O estoque foi atualizado com sucesso.',
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+                    } else {
+                        // Se o backend barrar por falta de saldo, o erro cai aqui!
+                        Swal.fire('Operação Bloqueada', response.error, 'error');
+                    }
+                },
+                error: function() {
+                    Swal.fire('Erro', 'Erro de comunicação com o servidor.', 'error');
+                }
+            });
+        }
+    });
+});
+
+/* ==========================================
+   LÓGICA DO MODAL DE HISTÓRICO DE MOVIMENTAÇÕES
+   ========================================== */
+   
+var tabelaHistorico = null;
+
+// Função para abrir o modal e carregar os dados
+$('#botao-historico').click(function() {
+    $('#modal-historico').modal('show');
+
+    // Se a tabela ainda não foi criada, inicializamos
+    if (tabelaHistorico === null) {
+        tabelaHistorico = $('#tabela-historico').DataTable({
+            ajax: {
+                url: '/historico_movimentacoes',
+                dataSrc: 'historico'
+            },
+            columns: [
+                { data: "produto_nome", title: "Produto" },
+                { data: "produto_codigo", title: "Código" },
+                { 
+                    data: "operacao", 
+                    title: "Operação",
+                    render: function(data) {
+                        if (data == 1) {
+                            return '<span class="badge badge-danger">Retirada</span>';
+                        } else {
+                            return '<span class="badge badge-success">Entrada</span>';
+                        }
+                    }
+                },
+                { 
+                    data: "quantidade", 
+                    title: "Qtd",
+                    render: function(data) {
+                        return parseFloat(data); // Remove o .0
+                    }
+                },
+                { data: "usuario_nome", title: "Usuário" },
+                { data: "data_formatada", title: "Data" }
+            ],
+            language: {
+                url: "/static/js/pt-BR.json"
+            },
+            columnDefs: [
+                { 
+                    className: "text-center", 
+                    targets: "_all" // Aplica em todas as colunas
+                }
+            ],
+            order: [[5, 'desc']] // Ordena pela data (última coluna) por padrão
+        });
+    } else {
+        // Se já existe, apenas recarrega os dados
+        tabelaHistorico.ajax.reload();
+    }
+});
+
+</script>
+
+{% endblock %}

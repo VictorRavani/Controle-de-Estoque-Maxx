@@ -1,0 +1,964 @@
+{% extends "base.html" %}
+{% block content %}
+ 
+<body class="background-page-default"></body>
+<!-- Tabela e botões -->  
+<div class="container-fluid text-black mt-4"> 
+    <!-- Botões adicionar, editar e excluir --> 
+    <div class="row justify-content-center">  
+        <div class="col-12 col-lg-4"></div>
+        <div class="col-6 col-lg-4 d-flex align-items-center justify-content-lg-center justify-content-center"><h4>Ordens de Produção</h4></div>
+        <div class="col-12 col-lg-4 d-flex align-items-center justify-content-end">
+            <button type="button" class="btn btn-success mx-1" id="botao-adicionar"><i class="fas fa-clipboard"></i> Adicionar</button>
+            <button type="button" class="btn btn-primary mx-1 my-0" id="botao-editar"><i class="fas fa-clipboard"></i> Editar</button> 
+            <button type="button" class="btn btn-danger text-white mx-1 my-0" id="botao-cancelar"><i class="fas fa-clipboard"></i> Cancelar </button>             
+        <!--<button type="button" class="btn btn-danger mx-1 my-0 " id="botao-apagar"><i class="fas fa-trash"></i> Excluir</button>--> 
+        </div>
+    </div>
+    
+    <!-- Tabela -->  
+    <div class="row d-flex justify-content-center mt-4">
+         <div class="col-12 col
+        <div class="col-12 px-1 py-1">
+            <div class="card o-hidden h-100 bg-light border-info align-items-center">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover text-nowrap text-center align-middle"
+                            id="tabela-ordens"
+                            style="width:100%;">
+                            <thead class="table-light"></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>   
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modals -->
+
+<!-- Editar OP -->  
+<div class="modal fade" id="editar-modal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Ordem de Produção</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <form id="editar-formulario">
+
+                    <input type="hidden" id="editar-id">
+
+                    <!-- OP -->
+                    <div class="form-group row">
+                        <label class="col-3 col-form-label text-right">Ordem de Prdoução:</label>
+                        <div class="col-9">
+                            <input type="text" class="form-control" id="editar_numero_op" required>
+                        </div>
+                    </div>
+
+                    <!-- Nº Certificado A.Q. -->
+                    <div class="form-group row">
+                        <label class="col-3 col-form-label text-right">Nº Cert. A.Q.:</label>
+                        <div class="col-9">
+                            <input type="text"
+                                class="form-control"
+                                id="editar_numero_qualidade"
+                                >
+                        </div>
+                    </div>
+
+                    <!-- Peça Nº -->
+                    <div class="form-group row">
+                        <label class="col-3 col-form-label text-right">Nº Peça:</label>
+
+                        <div class="col-9">
+                            <select class="form-control"
+                                    id="editar_id_produto"
+                                    style="width:100%;"
+                                    required>
+
+                                {% for produto in produtos %}
+                                    <option value="{{ produto.id }}">
+                                        {{ produto.codigo }}
+                                    </option>
+                                {% endfor %}
+
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Denominação -->
+                    <div class="form-group row">
+                        <label class="col-3 col-form-label text-right">Denominação:</label>
+                        <div class="col-9">
+                            <input type="text"
+                                class="form-control bg-light"
+                                id="editar_produto_nome"
+                                readonly>
+                        </div>
+                    </div>
+
+                    <!-- Data de Entrega -->
+                    <div class="form-group row">
+                        <label class="col-3 col-form-label text-right">Data de Entrega:</label>
+                        <div class="col-9">
+                            <input type="date" class="form-control" id="editar_data_entrega" required>
+                        </div>
+                    </div>
+
+                    <!-- Cliente -->
+                    <div class="form-group row">
+                        <label class="col-3 col-form-label text-right">Cliente:</label>
+                        <div class="col-9">
+                            <select class="form-control" id="editar_id_cliente" required>
+                                {% for cliente in clientes %}
+                                    <option value="{{ cliente.id }}">
+                                        {{ cliente.nome.strip() }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Material -->
+                    <div class="form-group row">
+                        <label class="col-3 col-form-label text-right">Material:</label>
+                        <div class="col-9">
+                            <select class="form-control" id="editar_id_material" required>
+                                {% for material in materiais %}
+                                    <option value="{{ material.id }}">
+                                        {{ material.codigo.strip() }} - {{ material.descricao.strip() }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Tratamento -->
+                    <div class="form-group row">
+                        <label class="col-3 col-form-label text-right">Tratamento:</label>
+                        <div class="col-9">
+                            <select class="form-control" id="editar_id_tratamento" required>
+                                <option value="1">Térmico</option>
+                                <option value="2">Geral</option>
+                                <option value="3">Amostra</option>
+                                <option value="4">Não conforme</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Quantidade -->
+                    <div class="form-group row">
+                        <label class="col-3 col-form-label text-right">Quantidade:</label>
+                        <div class="col-9">
+                            <input type="number" class="form-control" id="editar_quantidade" required>
+                        </div>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="form-group row">
+                        <label class="col-3 col-form-label text-right">Status:</label>
+                        <div class="col-9">
+                            <select class="form-control" id="editar_status_id" required>
+                                {% for status in status_ordens %}
+                                    <option value="{{ status.id }}">
+                                        {{ status.nome }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary mt-4 w-100">
+                        Salvar Alterações
+                    </button>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Adicionar Ordem de Produção -->
+<div class="modal fade" id="adicionar-modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Adicionar Ordem de Produção</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <form id="adicionar-formulario">
+
+                    <div class="text-center mb-4">
+
+                        <!-- Ícone -->
+                        <div class="mb-3">
+                            <i class="fas fa-industry bigIcon"></i>
+                        </div>
+
+                        <!-- Botões -->
+                        <div class="d-flex justify-content-center gap-2">
+
+                            <button type="button"
+                                    class="btn btn-success btn-sm mr-3"
+                                    id="botao-scan-barcode">
+                                <i class="fas fa-barcode"></i> Ler Código de Barras
+                            </button>
+
+                            <button type="button"
+                                    class="btn btn-primary btn-sm mr-3"
+                                    id="btn-manual-setup">
+                                <i class="fas fa-keyboard"></i> Manual
+                            </button>
+
+                            <button type="button"
+                                    class="btn btn-danger btn-sm mr-3"
+                                    id="botao-limpar-form">
+                                <i class="fas fa-trash-alt"></i> Limpar formulário
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                    <!-- OP -->
+                    <div class="form-group row">
+                        <label for="adicionar_numero_op" class="col-3 col-form-label text-right"> Ordem de Produção:</label>
+                        <div class="col-9">
+                            <input type="text" class="form-control" id="adicionar_numero_op" name="numero_op" required readonly>
+                            <span class="formErrorMsg text-danger" id="numero-op-erro"></span>
+                        </div>
+                    </div>
+
+                    <!-- Nº Certificado -->
+                    <div class="form-group row">
+                        <label class="col-3 col-form-label text-right">Nº Cert. A.Q.:</label>
+                        <div class="col-9">
+                            <input type="text" class="form-control" id="numero_qualidade" readonly>
+                        </div>
+                    </div>
+
+                    <!-- Peça Nº -->
+                    <div class="form-group row">
+                        <label class="col-3 col-form-label text-right">Peça Nº:</label>
+
+                        <div class="col-9">
+                            <select class="form-control"
+                                    id="id_produto"
+                                    style="width:100%;"
+                                    required>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Denominação -->
+                    <div class="form-group row">
+                        <label class="col-3 col-form-label text-right">Denominação:</label>
+
+                        <div class="col-9">
+                            <input type="text"
+                                class="form-control bg-light"
+                                id="produto_nome"
+                                readonly>
+                        </div>
+                    </div>
+
+                    <!-- Data de Entrega -->
+                    <div class="form-group row">
+                        <label class="col-3 col-form-label text-right">Data de Entrega:</label>
+                        <div class="col-9">
+                            <input type="date" class="form-control" id="data_entrega" required readonly>
+                        </div>
+                    </div>
+
+                    <!-- Cliente -->
+                    <div class="form-group row">
+                        <label class="col-3 col-form-label text-right">Cliente:</label>
+                        <div class="col-9">
+                            <select class="form-control" id="id_cliente" required>
+                                <option value="">Selecione o cliente</option>
+                                {% for cliente in clientes %}
+                                    <option value="{{ cliente.id }}">
+                                        {{ cliente.nome.strip() }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Material -->
+                    <div class="form-group row">
+                        <label for="id_material" class="col-3 col-form-label text-right">
+                            Material:
+                        </label>
+                        <div class="col-9">
+                            <select class="form-control" id="id_material" required>
+                                <option value="">Selecione o material</option>
+                                {% for material in materiais %}
+                                    <option value="{{ material.id }}">
+                                        {{ material.codigo.strip() }} - {{ material.descricao.strip() }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Tipo de Tratamento -->
+                    <div class="form-group row">
+                        <label class="col-3 col-form-label text-right">Tipo de Tratamento:</label>
+                        <div class="col-9">
+                            <select class="form-control" id="id_tratamento" required>
+                                <option value="">Selecione</option>
+                                <option value="1">Térmico</option>
+                                <option value="2">Geral</option>
+                                <option value="3">Amostra</option>
+                                <option value="4">Não conforme</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Quantidade -->
+                    <div class="form-group row">
+                        <label class="col-3 col-form-label text-right">Quantidade:</label>
+                        <div class="col-9">
+                            <input type="number" class="form-control" id="quantidade_total_ordem" required>
+                        </div>
+                    </div>
+
+
+                    <div class="alert alert-danger d-none text-center"
+                        id="mensagem-erro-ordem">
+                    </div>
+
+                    <button type="submit" class="btn btn-success mt-4 w-100">
+                        Salvar Ordem
+                    </button>
+
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmação para apagar usuário -->
+<div class="modal fade" id="mensagem-apagar" tabindex="-1" role="dialog"> 
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+            <div class="modal-body text-center">Apagar Ordem?<button class="btn btn-info my-2 w-100" id="botao-confirmacao">Confirmar</button></div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de mensagem Leitura de código de barras -->
+<div class="modal fade" id="barcode-modal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Aguardando leitura...</h5>
+            </div>
+
+            <div class="modal-body text-center">
+
+                <input type="text"
+                       class="form-control text-center"
+                       id="barcode-input"
+                       autocomplete="off"
+                       style="font-size:20px;"
+                       autofocus>
+
+                <small class="text-muted mt-2 d-block">
+                    Aponte o leitor para o código
+                </small>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+{% block scripts %}
+
+<script>
+
+
+    /* Criação da Tabela */
+    var table = $('#tabela-ordens').DataTable({
+        ajax: {
+            url: "/dados_ordens",
+            dataSrc: ""
+        },
+
+        language: {
+            url: "/static/js/pt-BR.json" 
+        },
+
+        pageLength: 10,
+        bLengthChange: false,
+        bFilter: true,
+
+        columnDefs: [
+            { className: "text-center", targets: "_all" }
+        ],
+
+        order: [[8, "desc"]],  // coluna 8 = data_criacao
+
+        columns: [
+            { data: "numero_op", title: "OP" },
+            { data: "produto", title: "DENOMINAÇÃO" },
+            { data: "codigo", title: "PEÇA Nº" },
+            { data: "quantidade_total_ordem", title: "QUANTIDADE" },
+            { data: "cliente", title: "CLIENTE" },
+            { data: "data_entrega", title: "DATA DE ENTREGA" },
+            { data: "material", title: "MATERIAL" },
+            { data: "numero_qualidade", title: "Nº Cert. A.Q." },
+            { 
+                data: "ultimo_processo", 
+                title: "ÚLTIMO PROCESSO",
+                render: function(data, type, row) {
+                    if(data == 0) return '<span class="badge" style="background-color: #6f42c1; color: white;">PCP</span>';
+                    if(data == 1) return '<span class="badge" style="background-color: #20c997; color: white;">Matéria-Prima</span>';
+                    if(data == 2) return '<span class="badge" style="background-color: #fd7e14; color: white;">Estamparia</span>';
+                    if(data == 3) return '<span class="badge badge-success">Solda</span>';
+                    if(data == 4) return '<span class="badge badge-danger">Retífica</span>';
+                    if(data == 5) return '<span class="badge badge-warning">Envio para Terceiros</span>';
+                    if(data == 6) return '<span class="badge badge-info">Recebimento de Terceiros</span>';
+                    if(data == 7) return '<span class="badge badge-light">Inspeção Final</span>';
+                    if(data == 8) return '<span class="badge badge-dark">Expedição</span>';
+                    return data;
+                }
+            },
+            { 
+                data: "processo_atual", 
+                title: "PROCESSO ATUAL",
+                render: function(data, type, row) {
+                    if(data == 0) return '<span class="badge" style="background-color: #6f42c1; color: white;">PCP</span>';
+                    if(data == 1) return '<span class="badge" style="background-color: #20c997; color: white;">Matéria-Prima</span>';
+                    if(data == 2) return '<span class="badge" style="background-color: #fd7e14; color: white;">Estamparia</span>';
+                    if(data == 3) return '<span class="badge badge-success">Solda</span>';
+                    if(data == 4) return '<span class="badge badge-danger">Retífica</span>';
+                    if(data == 5) return '<span class="badge badge-warning">Envio para Terceiros</span>';
+                    if(data == 6) return '<span class="badge badge-info">Recebimento de Terceiros</span>';
+                    if(data == 7) return '<span class="badge badge-light">Inspeção Final</span>';
+                    if(data == 8) return '<span class="badge badge-dark">Expedição</span>';
+                    return data;
+                }
+            },
+            { data: "status_ordem", title: "Status" },
+            { 
+                data: "data_criacao",
+                title: "Criado em",
+                render: function(data, type, row){
+                    if(type === "sort"){
+                        return row.data_criacao_iso;
+                    }
+                    return data;
+                }
+            },
+        ],
+
+        createdRow: function (row, data, dataIndex) {
+
+            if (data.id_tratamento == 1) {
+                $(row).addClass('termico');
+            }
+            else if (data.id_tratamento == 2) {
+                $(row).addClass('geral');
+            }
+            else if (data.id_tratamento == 3) {
+                $(row).addClass('amostra');
+            }
+            else if (data.id_tratamento == 4) {
+                $(row).addClass('nao-conforme');
+            }
+        }
+    });
+
+    /* Seleção de linha */
+    $('#tabela-ordens').on('click', 'tbody tr', function () {
+
+        var row = table.row(this);
+
+        if (!row.data()) return;
+
+        if ($(this).hasClass('tableSelected')) {
+            $(this).removeClass('tableSelected');
+        } else {
+            table.$('tr.tableSelected').removeClass('tableSelected');
+            $(this).addClass('tableSelected');
+        }
+
+    });
+
+    /*Adicionar ordem de Prdução*/
+    jQuery('#botao-adicionar').on('click', function(e){
+        jQuery('#adicionar-modal').modal('show');
+    });
+
+    /*Envio do formulário de adicionar ordem*/
+    $('#adicionar-formulario').on('submit', function(e){
+        e.preventDefault();
+
+        $.ajax({
+            url: '/adicionar_ordem',
+            type: 'POST',
+            data: {
+                numero_op: $('#adicionar_numero_op').val(),
+                id_produto: $('#id_produto').val(),
+                id_cliente: $('#id_cliente').val(),
+                quantidade_total_ordem: $('#quantidade_total_ordem').val(),
+                data_entrega: $('#data_entrega').val(),
+                id_tratamento: $('#id_tratamento').val(),
+                id_material: $('#id_material').val(),
+                numero_qualidade: $('#numero_qualidade').val(),
+            },
+            success: function(response){
+
+                if(response.success){
+
+                    $('#adicionar-modal').modal('hide');
+
+                    table.ajax.reload(null,false);
+
+                    msgSucesso("Ordem cadastrada com sucesso.");
+
+                } else {
+
+                    msgErro(response.error);
+
+                }
+
+            },
+            error: function(){
+
+                msgErro("Erro ao comunicar com o servidor.");
+
+            }
+        });
+    });
+
+    /*Puxar codigo do produto automaticamente*/    
+    $('#id_produto').on('change', function(){
+
+        const idProduto = $(this).val();
+
+        carregarProduto(idProduto, '#produto_nome');
+
+    });
+    
+    /*Edit Ordem*/
+    $('#botao-editar').on('click', function(){
+
+        var selectedRow = table.row('.tableSelected');
+
+        if (!selectedRow.data()) {
+            alert("Selecione uma ordem.");
+            return;
+        }
+
+        var data = selectedRow.data();
+
+        $('#editar-id').val(data.id);
+        $('#editar_numero_op').val(data.numero_op);
+        $('#editar_quantidade').val(data.quantidade_total_ordem);
+        $('#editar_data_entrega').val(data.data_entrega_iso);
+
+        $('#editar_id_tratamento').val(data.id_tratamento);
+        $('#editar_id_cliente').val(String(data.id_cliente));
+        $('#editar_id_material').val(String(data.id_material));
+        $('#editar_status_id').val(data.status_id);
+
+        $('#editar_numero_qualidade').val(data.numero_qualidade);
+
+        $('#editar_id_produto')
+            .val(String(data.id_produto))
+            .trigger('change.select2');
+
+        carregarProduto(data.id_produto, '#editar_produto_nome');
+
+        $('#editar-modal').modal('show');
+
+    });
+
+    $('#editar-formulario').on('submit', function(e){
+
+        e.preventDefault();
+
+        $.ajax({
+            url: '/ordens',
+            type: 'PUT',
+            data: {
+                id: $('#editar-id').val(),
+                numero_op: $('#editar_numero_op').val(),
+                id_cliente: $('#editar_id_cliente').val(),
+                id_material: $('#editar_id_material').val(),
+                id_tratamento: $('#editar_id_tratamento').val(),
+                quantidade: $('#editar_quantidade').val(),
+                data_entrega: $('#editar_data_entrega').val(),
+                status_id: $('#editar_status_id').val(),
+                numero_qualidade: $('#editar_numero_qualidade').val(),
+                id_produto: $('#editar_id_produto').val(),
+            },
+
+            success: function(response){
+
+                if(response.success){
+
+                    $('#editar-modal').modal('hide');
+
+                    table.ajax.reload(null, false);
+
+                    msgSucesso("Ordem atualizada com sucesso.");
+
+                } else {
+
+                    msgErro(response.error || "Erro ao atualizar ordem.");
+
+                }
+
+            },
+
+            error: function(xhr){
+
+                let mensagem = "Erro ao atualizar ordem.";
+
+                if(xhr.responseJSON && xhr.responseJSON.error){
+                    mensagem = xhr.responseJSON.error;
+                }
+
+                msgErro(mensagem);
+
+            }
+        });
+    });
+
+    /* Cancelar ordem */ 
+    $('#botao-cancelar').on('click', function(){
+
+        var selectedRow = table.row('.tableSelected');
+
+        if (!selectedRow.data()) {
+            alert("Selecione uma ordem.");
+            return;
+        }
+
+        if (!confirm("Deseja cancelar esta ordem?")) {
+            return;
+        }
+
+        var data = selectedRow.data();
+
+        $.ajax({
+            url: '/cancelar_ordem',
+            type: 'POST',
+            data: { id: data.id },
+
+            success: function(response){
+
+                if(response.success){
+
+                    table.ajax.reload(null, false);
+
+                    msgSucesso("Operação realizada com sucesso.");
+
+                } else {
+
+                    msgErro(response.error || "Erro ao executar operação.");
+
+                }
+
+            },
+
+            error: function(){
+
+                msgErro("Erro ao comunicar com o servidor.");
+
+            }
+        });
+
+    });
+
+
+let barcodeTimer = null;
+
+$('#botao-scan-barcode').on('click', function(){
+
+    $('#barcode-modal').modal('show');
+
+});
+
+$('#barcode-modal').on('shown.bs.modal', function () {
+
+    const input = $('#barcode-input');
+
+    input.val('');
+    input.focus();
+});
+
+$('#barcode-input').on('input', function(){
+
+    clearTimeout(barcodeTimer);
+
+    barcodeTimer = setTimeout(function(){
+
+        const codigoLido = $('#barcode-input').val().trim();
+
+        if(codigoLido.length > 0){
+            console.log("Código recebido:", codigoLido);
+
+            preencherFormulario(codigoLido);
+        }
+
+        $('#barcode-modal').modal('hide');
+
+    }, 1000); // 1 segundo sem digitação
+});
+
+/*Limpa os campos*/
+$('#botao-limpar-form').on('click', function(){
+
+    $('#adicionar-formulario')[0].reset();
+
+    $('#id_produto')
+        .val(null)
+        .trigger('change');
+
+    $('#produto_nome').val('');
+
+    $('#id_cliente').val(null).trigger('change');
+    $('#id_material').val(null).trigger('change');
+
+    $('#mensagem-erro-ordem')
+        .addClass('d-none')
+        .text('');
+
+});
+
+/*Limpar erro ao abrir modal*/
+$('#adicionar-modal').on('show.bs.modal', function(){
+    $('#mensagem-erro-ordem')
+        .addClass('d-none')
+        .text('');
+
+    $('#id_produto').prop('disabled', true).trigger('change.select2');
+
+    $('#adicionar_numero_op').prop('readonly', true);
+    $('#numero_qualidade').prop('readonly', true);
+    $('#produto_nome').prop('readonly', true);
+    $('#data_entrega').prop('readonly', true);
+});
+
+$('#tabela-ordens').on('click', 'tbody tr', function () {
+    console.log("Clique detectado");
+    var row = table.row(this);
+    if (!row.data()) return;
+
+    table.$('tr.tableSelected').removeClass('tableSelected');
+    $(this).addClass('tableSelected');
+
+});
+
+function preencherFormulario(codigo){
+
+    if (codigo.length !== 36){
+        alert("Código inválido");
+        return;
+    }
+
+    let numero_op        = codigo.substring(0, 8).replace(/^0+/, '');
+    let numero_qualidade = codigo.substring(8, 16).replace(/^0+/, '');
+    let codigo_produto   = codigo.substring(16, 28).replace(/^0+/, '');
+    let data_raw         = codigo.substring(28, 36);
+
+    const data_entrega =
+        data_raw.substring(0,4) + "-" +
+        data_raw.substring(4,6) + "-" +
+        data_raw.substring(6,8);
+
+    $('#adicionar_numero_op').val(numero_op);
+    $('#numero_qualidade').val(numero_qualidade);
+    $('#data_entrega').val(data_entrega);
+
+    $.ajax({
+        url: '/produto_por_codigo',
+        type: 'GET',
+        data: { codigo: codigo_produto },
+
+        success: function(response){
+
+            if(response.success){
+
+                $('#id_produto')
+                    .append(new Option(
+                        codigo_produto + " — " + response.nome,
+                        response.id_produto,
+                        true,
+                        true
+                    ))
+                    .trigger('change');
+
+                $('#produto_nome').val(response.nome);
+
+            } else {
+
+                msgErro("Produto não encontrado.");
+
+            }
+
+        },
+
+        error: function(){
+
+            msgErro("Erro ao consultar produto.");
+
+        }
+
+    });
+}
+
+
+$('#editar_id_produto').on('change', function(){
+
+    const idProduto = $(this).val();
+
+    carregarProduto(idProduto, '#editar_produto_nome');
+
+});
+
+$('#btn-manual-setup').on('click', function(){
+
+    $('#id_produto')
+        .prop('disabled', false)
+        .trigger('change.select2');
+
+    $('#adicionar_numero_op').prop('readonly', false);
+    $('#numero_qualidade').prop('readonly', false);
+    $('#produto_nome').prop('readonly', false);
+    $('#data_entrega').prop('readonly', false);
+
+});
+
+$('#id_produto').select2({
+
+    placeholder: "Digite o código da peça...",
+    minimumInputLength: 0,
+    width: '100%',
+
+    ajax: {
+
+        url: '/buscar_produtos',
+        dataType: 'json',
+        delay: 250,
+
+        data: function(params){
+            return {
+                search: params.term
+            };
+        },
+
+        processResults: function(data){
+
+            return {
+                results: data.map(function(produto){
+
+                    return {
+                        id: produto.id,
+                        text: produto.codigo,
+                        nome: produto.nome
+                    };
+
+                })
+            };
+
+        }
+
+    }
+
+});
+
+$('#editar_id_produto').select2({
+    placeholder: "Selecione a peça",
+    minimumInputLength: 0,
+    width: '100%'
+});
+
+$('#id_produto').on('select2:select', function(e){
+
+    var data = e.params.data;
+
+    $('#produto_nome').val(data.nome);
+    $('#id_produto').val(data.id);
+
+});
+
+
+/*Seleção de clientes*/
+$('#id_cliente').select2({
+    placeholder: "Digite para buscar cliente...",
+    allowClear: true,
+    width: '100%'
+});
+
+$('#id_material').select2({
+    placeholder: "Digite para buscar material...",
+    allowClear: true,
+    width: '100%'
+});
+
+
+function carregarProduto(idProduto, campoNome){
+
+    if(!idProduto){
+        $(campoNome).val('');
+        return;
+    }
+
+    $.ajax({
+        url: '/produto_info',
+        type: 'GET',
+        data: { id_produto: idProduto },
+
+        success: function(response){
+
+            if(response.success){
+                $(campoNome).val(response.nome);
+            } else {
+                $(campoNome).val('');
+            }
+
+        },
+
+        error: function(){
+            msgErro("Erro ao consultar produto.");
+        }
+
+    });
+}
+
+$(document).on('click', function(e){
+
+    if (!$(e.target).closest('#tabela-ordens').length) {
+
+        table.$('tr.tableSelected').removeClass('tableSelected');
+
+    }
+
+});
+
+</script>
+
+{% endblock %}

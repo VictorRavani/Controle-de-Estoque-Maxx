@@ -1,0 +1,199 @@
+
+html{height: 100%;}
+.container-fluid {
+    background-size: 100% 100%;
+    background-attachment: fixed;
+}
+
+body{background-color: #F1F1F1; height: 100%;}
+.navbar{background-color: rgb(0 123 255 / 32%); margin-bottom:2px; border-color: #043573;}
+.navbar-light .navbar-nav .nav-link{color: black;}
+.card-body {width: 100% }
+.card-header {background-color: #73040421;}
+.tableSelected{background-color: #FFD480 !important; color:black !important;}
+.bigIcon{font-size: 120px;color: #043573}
+.formErrorMsg{font-size: 10px; color: red;}
+.carousel-indicators li {width: 100px;height: 10px;border-radius: 10%;}
+.carousel-indicators {bottom: -50px;}
+.carousel-control-prev,
+.carousel-control-next {height: 300px; width: 20px;}
+
+
+select.form-control {-moz-appearance: none;-webkit-appearance: none;appearance: none;}
+@keyframes fa-blink {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 0; }
+}
+.fa-blink {
+  -webkit-animation: fa-blink .75s linear infinite;
+  -moz-animation: fa-blink .75s linear infinite;
+  -ms-animation: fa-blink .75s linear infinite;
+  -o-animation: fa-blink .75s linear infinite;
+  animation: fa-blink 1.0s linear infinite;
+}
+
+
+
+.navbar-verde {
+    background-color: rgb(71, 173, 76);
+}
+
+.dropdown-item:hover {
+    background-color: #dcdcdc;
+    color: #000;
+}
+
+.termico {
+    background-color: #ffe5cc !important; /* laranja claro */
+}
+
+.geral {
+    background-color: #fff9cc !important; /* amarelo claro */
+}
+
+.amostra {
+    background-color: #d6d6d6 !important; /* branco cinza claro */
+}
+
+.nao-conforme {
+    background-color: #ffd6d6 !important; /* vermelho claro */
+}
+
+table.dataTable {
+    width: 100% !important;
+}
+
+.nav-link:hover {
+    color: #ffffff !important;        /* cor do texto */
+    background-color: #0d6efd;        /* azul forte (padrão Bootstrap) */
+    transition: 0.2s ease-in-out;
+}
+
+body.login-page {
+    background: linear-gradient(rgba(253, 253, 253, 0.6), rgba(47, 156, 52, 0.671)),
+                url('../images/tela_logo_1.png') no-repeat center center;
+    background-size: cover;
+}
+
+body.background-page-default {
+    background: linear-gradient(rgba(253, 253, 253, 0.6), rgba(76, 233, 84, 0.219)),
+                url('../images/tela_logo_1.png') no-repeat center center;
+    background-size: cover;
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+.system-title {
+    font-family: Arial, sans-serif;
+    font-weight: bold;
+    color: #0b4200; /* branco para destacar no fundo */
+    letter-spacing: 1.5px;
+    font-size: 1.5rem;
+}
+
+.login-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    backdrop-filter: blur(5px);
+}
+
+.login-footer {
+    position: absolute;
+    bottom: 15px;
+    width: 100%;
+    color: #6b6969;
+    font-size: 0.85rem;
+    font-family: Arial, sans-serif;
+    letter-spacing: 0.5px;
+}
+
+.bg-login {
+    background: url('static/senai-1.0.0/images/Background.jpg') center/cover no-repeat;
+    min-height: 60vh;
+    padding-top: 5vh;   /* espaço proporcional à tela */
+}
+
+.select2-results__options {
+    max-height: 200px !important;
+    overflow-y: auto !important;
+}
+
+#botao-limpar-form:focus,
+#botao-limpar-form:active {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.btn:focus,
+.btn:active {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+#id_produto.bloqueado {
+    pointer-events: none;
+    background-color: #e9ecef;
+}
+
+.table tbody tr.tableSelected td {
+    background-color: #457feb !important;
+    color: #fff !important;
+}
+
+#toggleSenha:hover{
+    color:#000;
+}
+
+
+.footer-sistema{
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    height: 35px;
+    background-color: #0b6b3a;
+    color: white;
+    font-size: 13px;
+    z-index: 1000;
+}
+
+.footer-container{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 100%;
+    padding: 0 15px;
+}
+
+.footer-logo{
+    margin-right: 10px;
+}
+
+.footer-logo img{
+    height: 20px;
+}
+
+.footer-text{
+    flex: 1;
+    text-align: center;
+}
+
+#filtroProcesso{
+    color:#043573;
+    font-weight:500;
+}
+
+.btn-custom {
+    background-color: #6f42c1; /* roxo, por exemplo */
+    color: #fff;
+    border: none;
+}
+
+.btn-custom:hover {
+    background-color: #59359c;
+    color: #fff;
+}

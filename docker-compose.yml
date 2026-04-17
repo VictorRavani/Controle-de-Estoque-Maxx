@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  # 1. O Banco de Dados (PostgreSQL)
+  db:
+    image: postgres:15-alpine
+    container_name: postgres_aro
+    restart: always
+    # Ele lê as senhas direto do seu arquivo .env
+    env_file:
+      - .env
+    # Mapeia a porta do banco para você poder acessar pelo DBeaver/pgAdmin no Windows
+    ports:
+      - "5432:5432"
+    # Cria um volume para que os dados não sumam se o contêiner reiniciar
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./sql:/docker-entrypoint-initdb.d
+
+  # 2. O seu Sistema Web (Flask)
+  webapp:
+    build: .
+    container_name: webapp_aro
+    restart: always
+    # Ele também lê as variáveis do .env (DB_HOST, FLASK_SECRET_KEY, etc)
+    env_file:
+      - .env
+    environment:
+      # Força o sistema a procurar o banco pelo nome do contêiner ("db")
+      - DB_HOST=db
+    ports:
+      - "5002:5000" # O Windows acessa 8080, o Docker manda pra 5000
+    # Diz ao Docker: "Só ligue o site DEPOIS que o banco de dados estiver pronto"
+    depends_on:
+      - db
+
+# Define o disco virtual onde o banco vai salvar as tabelas
+volumes:
+  postgres_data:

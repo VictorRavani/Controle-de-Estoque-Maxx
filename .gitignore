@@ -1,0 +1,6 @@
+.env
+venv/
+__pycache__/
+.ruff_cache
+sql/02_setup_admin.sql
+sql/03_setup_tables.sql
