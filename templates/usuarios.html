@@ -723,12 +723,12 @@ toggleSenha("toggleAdicionarSenha", "adicionar-senha");
 toggleSenha("toggleAdicionarConfirmarSenha", "adicionar-confirmar-senha");
 
 
+// Previne que a linha perca a seleção ao interagir com a interface
 $(document).on('click', function(e){
 
-    if (!$(e.target).closest('#tabela-usuarios').length) {
-
+    // Só remove a seleção se clicar fora da tabela, fora de qualquer modal e fora dos botões
+    if (!$(e.target).closest('#tabela-usuarios, .modal, .btn').length) {
         table.$('tr.tableSelected').removeClass('tableSelected');
-
     }
 
 });

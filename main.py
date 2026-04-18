@@ -25,7 +25,8 @@ from flask import (
     redirect,        # Para redirecionar o usuário para outra tela (ex: após login)
     url_for,         # Para gerar URLs automáticas baseadas no nome da função
     render_template, # Para renderizar as suas páginas HTML na tela do navegador
-    flash            # Para enviar mensagens rápidas de aviso na tela (ex: "Senha incorreta")
+    flash,            # Para enviar mensagens rápidas de aviso na tela (ex: "Senha incorreta")
+    Response
 )
 
 # Ferramentas de segurança de acesso
@@ -988,7 +989,7 @@ def dados_historico():
             "inspecao_final": 7,
             "expedicao": 8
         }
-
+        setor_normalizado = setor_usuario.lower().strip()
         id_processo = MAPA_PROCESSOS.get(setor_usuario)
 
         if id_processo:
@@ -1229,14 +1230,7 @@ def exportar_csv():
 @app.route('/historico')
 @login_required
 def historico():
-    machine_names = databaseOBJ.readRaw(
-        "select id, bancada, setor, empresa from maquina order by id asc;"
-    )
-
-    return render_template(
-        'historico_producao.html',
-        machine_names=machine_names
-    )
+    return render_template('historico_producao.html')
 
 @app.route('/cancelar_ordem', methods=['POST'])
 @login_required
