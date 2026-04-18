@@ -56,6 +56,10 @@ class User(UserMixin):
 versao = '1.0.0'
 app = Flask(__name__)
 
+# Lê a variável do .env. Se não achar, assume False por segurança.
+modo_debug = os.getenv('FLASK_DEBUG', 'False') == 'True'
+app.config['DEBUG'] = modo_debug
+
 # Puxa a chave secreta do arquivo .env. 
 # Se não achar (ex: no seu PC local), usa uma chave padrão para desenvolvimento.
 app.secret_key = os.getenv('FLASK_SECRET_KEY', 'chave-padrao-super-secreta-dev-123')
@@ -2123,5 +2127,5 @@ def historico_movimentacoes():
 if __name__ == "__main__":
     # Isso só roda se você executar 'python main.py' manualmente
     # O Gunicorn ignora esse bloco, o que evita o conflito
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=modo_debug)
 
