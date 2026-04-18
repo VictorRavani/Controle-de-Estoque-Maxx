@@ -1341,7 +1341,8 @@ def produto_info():
     produto = databaseOBJ.readRaw("""
         SELECT nome
         FROM produtos
-        WHERE id = %s
+        WHERE ativo = true
+        AND id = %s
     """, (id_produto,), realdict=True)
 
     if produto:
@@ -1532,9 +1533,6 @@ def setup_pcp():
         "SELECT id, codigo, descricao FROM material ORDER BY codigo ASC;",
         realdict=True
     )
-
-    print("MATERIAIS:", materiais)
-    print("CLIENTES:", clientes)
 
     status_ordens = databaseOBJ.readRaw("""
         SELECT id, nome
