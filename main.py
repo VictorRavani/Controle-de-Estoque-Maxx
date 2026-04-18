@@ -482,6 +482,7 @@ def produtos():
         produtos = databaseOBJ.readRaw("""
             SELECT id, nome, codigo, saldo, estoque_minimo, ativo
             FROM produtos
+            WHERE ativo = true
             ORDER BY nome
         """, realdict=True)
 
@@ -504,7 +505,8 @@ def produtos():
         existe = databaseOBJ.readRaw("""
             SELECT 1
             FROM produtos
-            WHERE codigo = %s
+            WHERE ativo = true
+            AND codigo = %s
             LIMIT 1
         """,(codigo,), realdict=True)
 
@@ -543,7 +545,8 @@ def produtos():
         existe = databaseOBJ.readRaw("""
             SELECT nome, codigo
             FROM produtos
-            WHERE codigo = %s
+            WHERE ativo = true
+            AND codigo = %s
             AND id <> %s
             LIMIT 1
         """,(codigo, id_produto), realdict=True)
@@ -605,7 +608,7 @@ def registrar_movimentacao():
         
         # 1. Consulta quanto de saldo o produto tem agora neste exato segundo
         produto = databaseOBJ.readRaw("""
-            SELECT saldo, nome FROM produtos WHERE id = %s
+            SELECT saldo, nome FROM produtos WHERE ativo = true AND id = %s
         """, (id_produto,), realdict=True)
 
         if not produto:
@@ -1485,6 +1488,7 @@ def buscar_produtos():
         SELECT id, codigo, nome
         FROM produtos
         WHERE codigo ILIKE %s
+        AND ativo = true
         ORDER BY codigo
         LIMIT 20
     """, (f"%{search}%",), realdict=True)
@@ -2075,7 +2079,7 @@ def produto_por_codigo():
 
     codigo = request.args.get('codigo')
 
-    produto = databaseOBJ.readRaw("SELECT id, nome FROM produtos WHERE codigo = %s;", (codigo,), realdict=True)
+    produto = databaseOBJ.readRaw("SELECT id, nome FROM produtos WHERE ativo = true AND codigo = %s;", (codigo,), realdict=True)
 
     if not produto:
         return jsonify({'success': False})
