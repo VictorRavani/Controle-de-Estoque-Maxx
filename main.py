@@ -1519,22 +1519,12 @@ def processos_por_ordem():
 @login_required
 def setup_pcp():
 
-    machine_names = databaseOBJ.readRaw(
-        "select id, bancada, setor, empresa from maquina order by id asc;"
-    )
-
     user = databaseOBJ.readRaw(
         "select id, nome from usuarios where privilegio = 1 order by id DESC;"
     )
 
-    produtos = databaseOBJ.readRaw(
-        "select id, nome from produtos order by nome asc;",
-        realdict=True
-    )
-    print("PRODUTOS:", produtos)
-
     clientes = databaseOBJ.readRaw(
-        "SELECT id, nome FROM clientes ORDER BY nome ASC;",
+        "SELECT id, nome FROM clientes WHERE visibilidade = true ORDER BY nome ASC;",
         realdict=True
     )
 
@@ -1555,12 +1545,12 @@ def setup_pcp():
     produtos = databaseOBJ.readRaw("""
         SELECT id, codigo, nome
         FROM produtos
+        WHERE ativo = true
         ORDER BY codigo
     """, realdict=True)
 
     return render_template(
         'setup.html',
-        machine_names=machine_names,
         user=user,
         materiais=materiais,
         status_ordens=status_ordens,
