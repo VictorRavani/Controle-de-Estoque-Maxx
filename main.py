@@ -174,7 +174,7 @@ def privilege_required(level):
 
             if current_user.privileges < level:
                 flash("Você não tem permissão para acessar esta página.")
-                return redirect(url_for('monitoramento_OP'))
+                return redirect(url_for('monitoramento_OP',processo='geral'))
 
             return f(*args, **kwargs)
 
@@ -473,7 +473,7 @@ def mudarsenha():
 
 @app.route('/adm/produtos')
 @login_required
-@privilege_required(2)
+@privilege_required(1)
 def adm_produtos():
     return render_template('adm_produtos.html')
 
@@ -947,7 +947,7 @@ def autenticacao():
 
             if setor:
                 return redirect(
-                    url_for('monitoramento_OP', processo=setor)
+                    url_for('adm_produtos')
                 )
             else:
                 # Se por algum motivo não tiver setor definido

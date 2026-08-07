@@ -3,6 +3,38 @@
 
 <body class="background-page-default"></body>
 
+{% if current_user.privileges == 1 %}
+<!-- ==========================================
+     TELA EXCLUSIVA DO OPERADOR (Leitura Contínua)
+     ========================================== -->
+<div class="container-fluid mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+            <h2 class="mb-4 text-dark"><i class="fas fa-barcode"></i> Baixa Rápida de Estoque</h2>
+            
+            <div class="card shadow-lg border-info" style="border-width: 2px;">
+                <div class="card-body py-5">
+                    <h5 class="text-secondary mb-4">Aguardando leitura do código de barras...</h5>
+                    
+                    <!-- Campo onde o leitor vai injetar o código automaticamente -->
+                    <input type="text" id="operador-barcode" class="form-control form-control-lg text-center bg-light font-weight-bold" 
+                           style="font-size: 2.5rem; border: 3px solid #17a2b8; height: 80px;" 
+                           placeholder="Bipe aqui" autofocus autocomplete="off">
+                    
+                    <!-- Painel de resposta (Sucesso ou Erro) -->
+                    <div id="operador-status" class="mt-4 p-3 rounded shadow-sm" style="font-size: 1.3rem; display: none;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<!-- ==========================================
+     TELA ORIGINAL DO ADMINISTRADOR / PCP
+========================================== -->
+
 <!-- BOTÕES DA TELA E TABELA -->
 <div class="container-fluid text-black mt-4">
     <div class="row justify-content-center">
@@ -222,11 +254,96 @@
         </div>
     </div>
 </div>
-
+{% endif %}
 {% endblock %}
+
 {% block scripts %}
 
+{% if current_user.privileges == 1 %}
 <script>
+/* ==========================================
+   LÓGICA EXCLUSIVA DO OPERADOR
+   ========================================== */
+$(document).ready(function() {
+    var input = $('#operador-barcode');
+    var statusDiv = $('#operador-status');
+
+    // 1. O Pulo do Gato: Força o foco de volta para o campo de texto caso o operador clique fora da tela sem querer.
+    $(document).on('click', function() {
+        input.focus();
+    });
+
+    // 2. Escuta a "teclada" final do leitor de código de barras (Enter)
+    input.on('keypress', function(e) {
+        if (e.which === 13) { 
+            e.preventDefault();
+            var codigoBruto = input.val().trim();
+            input.val(''); // Limpa o campo instantaneamente para o próximo bip
+            
+            if (codigoBruto) {
+                processarBaixaAutomatica(codigoBruto);
+            }
+        }
+    });
+
+    function processarBaixaAutomatica(codigo) {
+        statusDiv.show().removeClass().addClass('mt-4 p-3 rounded bg-warning text-dark')
+                 .html('<i class="fas fa-spinner fa-spin"></i> Consultando código...');
+
+        // Reaproveita a sua lógica de fatiamento de códigos longos
+        let codigo_produto = codigo;
+        if (codigo.length === 36) {
+            codigo_produto = codigo.substring(16, 28).replace(/^0+/, '');
+        }
+
+        // Requisição 1: Busca o ID e o Nome do Produto pelo código
+        $.ajax({
+            url: '/produto_por_codigo',
+            type: 'GET',
+            data: { codigo: codigo_produto },
+            success: function(response){
+                if(response.success){
+                    var idCorreto = response.id_produto || response.id;
+                    
+                    // Requisição 2: Executa a baixa de 1 unidade
+                    $.ajax({
+                        url: '/registrar_movimentacao',
+                        type: 'POST',
+                        data: {
+                            id_produto: idCorreto,
+                            quantidade: 1, // Baixa de 1 unidade por Bip
+                            operacao: 1 // 1 = SAÍDA
+                        },
+                        success: function(baixaResp) {
+                            if(baixaResp.success) {
+                                statusDiv.removeClass().addClass('mt-4 p-3 rounded bg-success text-white')
+                                         .html('<i class="fas fa-check-circle fa-lg"></i> <b>Sucesso!</b> Baixa de 1x ' + response.nome);
+                            } else {
+                                // Ex: Se o estoque estiver zerado e a sua trava de segurança bloquear
+                                statusDiv.removeClass().addClass('mt-4 p-3 rounded bg-danger text-white')
+                                         .html('<i class="fas fa-exclamation-triangle fa-lg"></i> <b>Bloqueado:</b> ' + baixaResp.error);
+                            }
+                        }
+                    });
+                } else {
+                    statusDiv.removeClass().addClass('mt-4 p-3 rounded bg-danger text-white')
+                             .html('<i class="fas fa-times-circle fa-lg"></i> Produto não encontrado no sistema.');
+                }
+            },
+            error: function() {
+                statusDiv.removeClass().addClass('mt-4 p-3 rounded bg-dark text-white')
+                         .html('<i class="fas fa-wifi"></i> Erro de comunicação com o servidor.');
+            }
+        });
+    }
+});
+</script>
+{% else %}
+
+<script>
+/* ==========================================
+   LÓGICA ORIGINAL DO ADMINISTRADOR
+========================================== */
 
 // Tabela
 var table = $('#tabela-produtos').DataTable({
@@ -764,5 +881,5 @@ $('#botao-historico').click(function() {
 });
 
 </script>
-
+{% endif %}
 {% endblock %}

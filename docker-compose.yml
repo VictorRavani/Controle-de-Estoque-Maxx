@@ -16,6 +16,12 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./sql:/docker-entrypoint-initdb.d
+    # NOVIDADE: Um "termômetro" para o Docker testar se o banco já está aceitando conexões
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d db_Estoque_Maxx"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   # 2. O seu Sistema Web (Flask)
   webapp:
@@ -31,8 +37,13 @@ services:
     ports:
       - "5002:5000" # O Windows acessa 8080, o Docker manda pra 5000
     # Diz ao Docker: "Só ligue o site DEPOIS que o banco de dados estiver pronto"
+    # NOVIDADE: A fila de comandos. Executa os dois scripts e depois sobe o Gunicorn.
+    # Usamos o ";" para garantir que o Gunicorn suba mesmo se a importação der algum alerta de duplicidade.
+    command: sh -c "python criar_admin.py ; python importar_produtos.py ; gunicorn -w 4 -b 0.0.0.0:5000 main:app"
     depends_on:
-      - db
+      db:
+        # NOVIDADE: O webapp agora fica em "espera" até o termômetro do banco dar o sinal verde
+        condition: service_healthy
 
 # Define o disco virtual onde o banco vai salvar as tabelas
 volumes:

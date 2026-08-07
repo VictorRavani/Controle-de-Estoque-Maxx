@@ -11,6 +11,14 @@ def importar_produtos():
         print("Erro: Não foi possível conectar ao banco de dados.")
         return
 
+    # 🔥 A TRAVA DE SEGURANÇA: Verifica se a tabela está vazia
+    contagem = db.readRaw("SELECT COUNT(id) FROM produtos;")
+    
+    if contagem and contagem[0][0] > 0:
+        quantidade_atual = contagem[0][0]
+        print(f"-> Importação cancelada: O banco já possui {quantidade_atual} produtos cadastrados.")
+        return
+
     # Lista completa de produtos extraída do seu Excel (Nome, Codigo)
     itens = [
         ("ACELERADOR DE SECAGEM 068 SECADO - 450ml", "7891452138945"),
