@@ -21,12 +21,8 @@
         <div class="footer-container">
 
             <div class="footer-text">
-                Sistema de Monitoramento de Produção | 
-                © {{ now.year }} ARO Estamparia e Ferramentaria Mecânica Ltda.
-            </div>
-
-            <div class="footer-logo">
-                <img src="{{ url_for('static', filename='senai-1.0.0/images/SENAI_São_Paulo_logo.png') }}" height="20">
+                Sistema de Controle de Estoque | 
+                © {{ now.year }} Maxx Alta Pressão.
             </div>
 
         </div>
@@ -38,7 +34,7 @@
 
     <nav class="navbar navbar-expand-lg navbar-light navbar-verde">
         <!--<a class="navbar-brand" href="#"><img class="d-inline-block align-top" height="25" src="{{ url_for('static', filename='senai-1.0.0/images/SENAI_São_Paulo_logo.png') }}" id="logosenai"></a>-->
-        <a class="navbar-brand" href="#"><img class="d-inline-block align-center" height="35"src="{{ url_for('static', filename='senai-1.0.0/images/Logo_Aro_sem_fundo.png') }}" id="logoempresa"></a>
+        <!--<a <a class="navbar-brand" href="#"><img class="d-inline-block align-center" height="35"src="{{ url_for('static', filename='senai-1.0.0/images/Logo_Aro_sem_fundo.png') }}" id="logoempresa"></a> -->
         <!-- <a class="navbar-brand" href="#"><img class="d-inline-block align-top" height="35" src="{{ url_for('static', filename='senai-1.0.0/images/sistema.png') }}"></a> -->
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#nav1" aria-controls="nav1" aria-expanded="false" aria-label="Navegação">
             <span class="navbar-toggler-icon"></span>
@@ -49,50 +45,53 @@
                 <li class="nav-item mr-3"> <!-- MONITORAMENTO (TODOS) -->
 
                     {% if current_user.privileges in [2, 3] %}
-
+                    {#
                     <!-- Supervisor / Admin / PCP -->
                     <a class="nav-link btn" href="{{ url_for('monitoramento_OP', processo='geral') }}">
                         <i class="fas fa-eye"></i> Monitoramento
                     </a>
-                
+                    #}
                 {% elif current_user.privileges == 1 %}
-
+                {#
                     <!-- Operador -->
                     <a class="btn"
                     href="{{ url_for('monitoramento_OP', processo=current_user.setor) }}">
                         <i class="fas fa-eye"></i> Monitoramento
                     </a>
-
+                #}
                 {% endif %}
 
                 </li>
- 
+                {#
                 <li class="nav-item mr-3"> <!-- HISTÓRICO (TODOS) -->
                     <a class="nav-link btn" href="{{ url_for('historico') }}">
                         <i class="fas fa-clipboard"></i>  Histórico Produção 
                     </a>
                 </li>
+                #}
                 {% endif %}
                 
                 {% if current_user.is_authenticated and current_user.privileges > 1 %}
+                {#
                 <li class="nav-item mr-3"> <!-- ORDENS DE PRODUÇÃO (ADM) -->
                     <a class="nav-link btn" href="{{ url_for('setup_pcp') }}">
                         <i class="fas fa-cogs"></i>  Ordens 
                     </a>
                 </li>
+                #}
 
                 <li class="nav-item mr-3">
                     <a class="nav-link btn" href="{{ url_for('adm_produtos') }}">
                         <i class="fas fa-boxes"></i> Produtos
                     </a>
                 </li>
-
+                {#
                 <li class="nav-item mr-3">
                     <a class="nav-link btn" href="{{ url_for('adm_clientes') }}">
                         <i class="fas fa-truck"></i> Clientes
                     </a>
                 </li>
-
+                #}
                 <li class="nav-item mr-3">
                     <a class="nav-link btn" href="{{ url_for('adm_operadores') }}">
                         <i class="fas fa-tools"></i> Operadores

@@ -952,14 +952,14 @@ def autenticacao():
             else:
                 # Se por algum motivo não tiver setor definido
                 return redirect(
-                    url_for('monitoramento_OP', processo='geral')
+                    url_for('adm_produtos')
                 )
 
         # Nível 2 (PCP) ou 3 (ADM) → visão geral
         elif privilegio in [2,3]:
 
             return redirect(
-                url_for('monitoramento_OP', processo='geral')
+                url_for('adm_produtos')
             )
 
     return render_template('autenticacao.html')

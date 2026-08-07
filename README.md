@@ -258,11 +258,11 @@ Arquivo .sql é restaurado com psql ou Query Tool.
 
 <img width="395" height="218" alt="image" src="https://github.com/user-attachments/assets/8e1e62ec-517b-4917-834f-811b5f12ae66" />
 
-## Conexão com o DB: db_ARO
+## Conexão com o DB: db_Estoque_Maxx
 
 ```powershell
 class postgresDatabase():
-    def __init__(self, user='postgres', password='postgres', host='localhost', dbname='db_ARO', port='5432'):
+    def __init__(self, user='postgres', password='postgres', host='localhost', dbname='db_Estoque_Maxx', port='5432'):
 ```
 
 

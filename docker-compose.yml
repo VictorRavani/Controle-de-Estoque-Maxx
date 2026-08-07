@@ -4,7 +4,7 @@ services:
   # 1. O Banco de Dados (PostgreSQL)
   db:
     image: postgres:15-alpine
-    container_name: postgres_aro
+    container_name: postgres_estoque_maxx
     restart: always
     # Ele lê as senhas direto do seu arquivo .env
     env_file:
@@ -20,7 +20,7 @@ services:
   # 2. O seu Sistema Web (Flask)
   webapp:
     build: .
-    container_name: webapp_aro
+    container_name: webapp_estoque_maxx
     restart: always
     # Ele também lê as variáveis do .env (DB_HOST, FLASK_SECRET_KEY, etc)
     env_file:
