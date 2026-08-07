@@ -11,7 +11,7 @@ services:
       - .env
     # Mapeia a porta do banco para você poder acessar pelo DBeaver/pgAdmin no Windows
     ports:
-      - "5432:5432"
+      - "5440:5432"
     # Cria um volume para que os dados não sumam se o contêiner reiniciar
     volumes:
       - postgres_data:/var/lib/postgresql/data
