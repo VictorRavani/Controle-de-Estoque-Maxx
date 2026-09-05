@@ -500,6 +500,10 @@ def produtos():
         codigo = request.values.get('codigo')
         saldo = request.values.get('saldo')
         estoque_minimo = request.values.get('estoque_minimo')
+        
+        # Puxa os novos campos do formulário
+        id_fornecedor = request.values.get('id_fornecedor')
+        preco = request.values.get('preco')
 
         # Limpeza para evitar espaços acidentais antes ou depois
         nome = str(nome).strip()
@@ -520,11 +524,22 @@ def produtos():
                 "error": f"Operação bloqueada! O código '{codigo}' já está em uso por outro produto."
             })
 
-        # Se o código estiver livre, salva no banco com os campos novos!
-        databaseOBJ.writeRaw("""
+        # Insere o produto E já resgata o ID gerado na mesma operação
+        resultado_insert = databaseOBJ.readRaw("""
             INSERT INTO produtos (nome, codigo, saldo, estoque_minimo)
-            VALUES (%s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s) RETURNING id
         """, (nome, codigo, saldo, estoque_minimo))
+
+        # Se o produto foi salvo com sucesso, gravamos o histórico de compra
+        if resultado_insert:
+            id_novo_produto = resultado_insert[0][0]
+            
+            # Só faz o insert se o usuário preencheu o fornecedor e o preço no form
+            if id_fornecedor and preco:
+                databaseOBJ.writeRaw("""
+                    INSERT INTO valor_de_compra (id_produto, id_fornecedor, preco_ultima_compra)
+                    VALUES (%s, %s, %s)
+                """, (id_novo_produto, id_fornecedor, preco))
 
         return jsonify({"success": True})
 
@@ -574,6 +589,24 @@ def produtos():
                 estoque_minimo = %s
             WHERE id = %s
         """, (nome, codigo, saldo, estoque_minimo, id_produto))
+
+        # Processa a lista de preços atualizados vindos da tabela
+        precos_json = request.values.get('precos_fornecedores')
+        if precos_json:
+            import json
+            try:
+                lista_precos = json.loads(precos_json)
+                for item in lista_precos:
+                    id_forn = item.get('id_fornecedor')
+                    preco_novo = item.get('preco')
+                    
+                    if id_forn and preco_novo:
+                        databaseOBJ.writeRaw("""
+                            INSERT INTO valor_de_compra (id_produto, id_fornecedor, preco_ultima_compra)
+                            VALUES (%s, %s, %s)
+                        """, (id_produto, id_forn, preco_novo))
+            except Exception as e:
+                print("Erro ao atualizar preços em lote:", e)
 
         return jsonify({"success": True})
 
@@ -2118,6 +2151,229 @@ def historico_movimentacoes():
     except Exception as e:
         print("Erro ao carregar histórico:", e)
         return jsonify({"success": False, "error": "Erro ao carregar o histórico."}), 500
+
+
+@app.route('/fornecedores', methods=['GET', 'POST', 'PUT', 'DELETE'])
+@login_required
+def crud_fornecedores():
+    if request.method == 'GET':
+        fornecedores = databaseOBJ.readRaw("""
+            SELECT id, nome, whatsapp, email, forma_pagamento, chave_pix
+            FROM fornecedores 
+            WHERE ativo = true 
+            ORDER BY nome;
+        """, realdict=True)
+        return jsonify({"fornecedores": fornecedores})
+        
+    elif request.method == 'POST':
+        nome = request.form.get('nome')
+        whatsapp = request.form.get('whatsapp')
+        email = request.form.get('email')
+        pagamento = request.form.get('forma_pagamento')
+        pix = request.form.get('chave_pix')
+        
+        databaseOBJ.writeRaw("""
+            INSERT INTO fornecedores (nome, whatsapp, email, forma_pagamento, chave_pix)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (nome, whatsapp, email, pagamento, pix))
+        return jsonify({"success": True})
+        
+    elif request.method == 'PUT':
+        id_forn = request.form.get('id')
+        nome = request.form.get('nome')
+        whatsapp = request.form.get('whatsapp')
+        email = request.form.get('email')
+        pagamento = request.form.get('forma_pagamento')
+        pix = request.form.get('chave_pix')
+        
+        databaseOBJ.writeRaw("""
+            UPDATE fornecedores
+            SET nome = %s, whatsapp = %s, email = %s, forma_pagamento = %s, chave_pix = %s
+            WHERE id = %s
+        """, (nome, whatsapp, email, pagamento, pix, id_forn))
+        return jsonify({"success": True})
+        
+    elif request.method == 'DELETE':
+        id_forn = request.form.get('id')
+        # Soft delete: Protege a consistência do histórico de compras
+        databaseOBJ.writeRaw("UPDATE fornecedores SET ativo = false WHERE id = %s", (id_forn,))
+        return jsonify({"success": True})
+
+@app.route('/dados_compra_produto', methods=['GET'])
+@login_required
+def dados_compra_produto():
+    id_produto = request.args.get('id_produto')
+    
+    # Coleta exclusivamente o registro mais recente (última compra)
+    dados = databaseOBJ.readRaw("""
+        SELECT id_fornecedor, preco_ultima_compra, TO_CHAR(data_modificacao, 'DD/MM/YYYY HH24:MI') as data_modificacao
+        FROM valor_de_compra
+        WHERE id_produto = %s
+        ORDER BY data_modificacao DESC LIMIT 1
+    """, (id_produto,), realdict=True)
+    
+    if dados:
+        return jsonify({"success": True, "dados": dados[0]})
+    return jsonify({"success": False})
+
+@app.route('/fornecedores_produto', methods=['GET'])
+@login_required
+def fornecedores_produto():
+    id_produto = request.args.get('id_produto')
+    
+    # 🔎 Pega APENAS os fornecedores que têm histórico para este produto
+    sql = """
+        SELECT 
+            f.id as id_fornecedor,
+            f.nome as fornecedor_nome,
+            vc.preco_ultima_compra as preco,
+            TO_CHAR(vc.data_modificacao, 'DD/MM/YYYY HH24:MI') as data_modificacao
+        FROM (
+            SELECT DISTINCT ON (id_fornecedor) id_fornecedor, preco_ultima_compra, data_modificacao
+            FROM valor_de_compra
+            WHERE id_produto = %s
+            ORDER BY id_fornecedor, data_modificacao DESC
+        ) vc
+        INNER JOIN fornecedores f ON f.id = vc.id_fornecedor
+        WHERE f.ativo = true
+        ORDER BY f.nome
+    """
+    
+    dados = databaseOBJ.readRaw(sql, (id_produto,), realdict=True)
+    return jsonify({"success": True, "fornecedores": dados})
+
+@app.route('/atualizar_preco_fornecedor', methods=['POST'])
+@login_required
+def atualizar_preco_fornecedor():
+    try:
+        # 1. Garante que os IDs são números inteiros
+        id_produto = int(request.form.get('id_produto'))
+        id_fornecedor = int(request.form.get('id_fornecedor'))
+        
+        # 2. Captura o preço e troca vírgula por ponto (caso venha do navegador em PT-BR)
+        preco_str = request.form.get('preco', '0')
+        preco_str = preco_str.replace(',', '.')
+        preco = float(preco_str)
+        
+        if preco <= 0:
+            return jsonify({"success": False, "error": "Valor inválido."})
+
+        # 3. Executa a inserção
+        databaseOBJ.writeRaw("""
+            INSERT INTO valor_de_compra (id_produto, id_fornecedor, preco_ultima_compra)
+            VALUES (%s, %s, %s)
+        """, (id_produto, id_fornecedor, preco))
+        
+        return jsonify({"success": True})
+
+    except Exception as e:
+        # Se falhar, o erro exato aparecerá no terminal do seu servidor Flask
+        print(f"ERRO AO SALVAR PREÇO (Produto: {id_produto}, Fornecedor: {id_fornecedor}):", e)
+        return jsonify({"success": False, "error": f"Erro interno: {str(e)}"})
+
+
+@app.route('/exportar_produtos_csv')
+@login_required
+def exportar_produtos_csv():
+    # 1. Busca todos os produtos ativos
+    produtos = databaseOBJ.readRaw("""
+        SELECT id, nome, codigo, saldo, estoque_minimo
+        FROM produtos 
+        WHERE ativo = true 
+        ORDER BY nome;
+    """, realdict=True)
+
+    # 2. Busca o último preço de CADA fornecedor para TODOS os produtos
+    # O DISTINCT ON garante que pegamos apenas o preço mais recente de cada par (produto + fornecedor)
+    compras = databaseOBJ.readRaw("""
+        SELECT vc.id_produto, f.nome as fornecedor_nome, vc.preco_ultima_compra
+        FROM (
+            SELECT DISTINCT ON (id_produto, id_fornecedor) 
+                   id_produto, id_fornecedor, preco_ultima_compra, data_modificacao
+            FROM valor_de_compra
+            ORDER BY id_produto, id_fornecedor, data_modificacao DESC
+        ) vc
+        INNER JOIN fornecedores f ON f.id = vc.id_fornecedor
+        WHERE f.ativo = true
+        ORDER BY vc.id_produto, vc.data_modificacao DESC;
+    """, realdict=True)
+
+    # 3. Agrupa os fornecedores por produto no Python
+    historico_por_produto = {}
+    max_fornecedores = 0
+
+    for compra in compras:
+        id_prod = compra['id_produto']
+        if id_prod not in historico_por_produto:
+            historico_por_produto[id_prod] = []
+        
+        historico_por_produto[id_prod].append({
+            "nome": compra['fornecedor_nome'],
+            "preco": compra['preco_ultima_compra']
+        })
+        
+        # Monitora qual produto tem mais fornecedores para definir o tamanho do CSV
+        qtd = len(historico_por_produto[id_prod])
+        if qtd > max_fornecedores:
+            max_fornecedores = qtd
+
+    # 4. Prepara o arquivo em memória RAM
+    output = io.StringIO(newline="")
+    output.write('\ufeff') # BOM para forçar UTF-8 no Excel
+    writer = csv.writer(output, delimiter=';')
+
+    # 5. Monta o cabeçalho base + colunas dinâmicas
+    cabecalho = ["Produto", "Código", "Saldo Atual", "Estoque Mínimo"]
+    
+    # Cria as colunas "Fornecedor 1", "Preço 1", "Fornecedor 2"... 
+    for i in range(1, max_fornecedores + 1):
+        cabecalho.append(f"Fornecedor {i}")
+        cabecalho.append(f"Preço {i} (R$)")
+        
+    writer.writerow(cabecalho)
+
+    # 6. Preenche as linhas dos produtos
+    for p in produtos:
+        codigo_bruto = p.get("codigo")
+        codigo_formatado = f'="{codigo_bruto}"' if codigo_bruto else "-"
+        
+        linha = [
+            p.get("nome", "-"),
+            codigo_formatado,
+            p.get("saldo") or 0,
+            p.get("estoque_minimo") or 0
+        ]
+        
+        # Pega a lista de fornecedores do produto atual
+        fornecedores_deste_produto = historico_por_produto.get(p['id'], [])
+        
+        # Preenche os "slots" de fornecedores na linha
+        for i in range(max_fornecedores):
+            if i < len(fornecedores_deste_produto):
+                f = fornecedores_deste_produto[i]
+                
+                # Troca ponto por vírgula para o Excel (BR) formatar nativamente como dinheiro
+                preco_formatado = str(f['preco']).replace('.', ',') if f['preco'] else ""
+                
+                linha.append(f['nome'])
+                linha.append(preco_formatado)
+            else:
+                # Preenche com traços caso o produto não tenha fornecedor para esta coluna
+                linha.append("-")
+                linha.append("-")
+        
+        writer.writerow(linha)
+
+    output.seek(0)
+
+    # 7. Envia o arquivo para download
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv; charset=utf-8",
+        headers={
+            "Content-Disposition": "attachment; filename=lista_de_produtos.csv"
+        }
+    )
 
 #app.run(debug=True)
 

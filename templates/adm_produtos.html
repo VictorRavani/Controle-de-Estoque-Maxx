@@ -46,8 +46,16 @@
 
         <div class="col-12 col-lg-4 d-flex align-items-center justify-content-end">
 
+            <button type="button" class="btn btn-dark mx-1" id="botao-exportar-produtos">
+                <i class="fas fa-file-csv"></i> Exportar
+            </button>
+
             <button type="button" class="btn btn-custom mx-1" id="botao-registrar_saida">
                 <i class="fas fa-arrow-up"></i> Registrar saída
+            </button>
+
+            <button type="button" class="btn btn-secondary mx-1" id="botao-gerenciar-fornecedores">
+                <i class="fas fa-truck"></i> Fornecedores
             </button>
 
             <button type="button" class="btn btn-success mx-1" id="botao-adicionar-produto">
@@ -87,7 +95,7 @@
 
 <!-- MODAL ADICIONAR PRODUTO -->
 <div class="modal fade" id="modal-adicionar-produto">
-    <div class="modal-dialog"> 
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
 
             <div class="modal-header">
@@ -132,7 +140,7 @@
 </div>
 
 <div class="modal fade" id="editar-modal">
-    <div class="modal-dialog"> 
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
 
             <div class="modal-header">
@@ -167,6 +175,29 @@
                             <label>Estoque Mínimo</label>
                             <input type="number" class="form-control" id="editar-estoque-minimo" step="1" min="0" required>
                         </div>
+                    </div>
+
+                    <hr class="mt-4 mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="text-secondary font-weight-bold mb-0"><i class="fas fa-list"></i> Histórico de Fornecedores</h6>
+                        <button type="button" class="btn btn-sm btn-primary" id="botao-novo-preco">
+                            <i class="fas fa-plus"></i> Adicionar Fornecedor
+                        </button>
+                    </div>
+
+                    <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                        <table class="table table-sm table-bordered table-hover text-center" id="tabela-fornecedores-editar">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th class="align-middle">Fornecedor</th>
+                                    <th class="align-middle" style="width: 140px;">Valor (R$)</th>
+                                    <th class="align-middle" style="width: 150px;">Última Atualização</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- As linhas serão injetadas via JavaScript -->
+                            </tbody>
+                        </table>
                     </div>
 
                     <button type="submit" class="btn btn-primary w-100 mt-3">
@@ -254,6 +285,115 @@
         </div>
     </div>
 </div>
+
+<!-- MODAL ADICIONAR PREÇO/FORNECEDOR -->
+<div class="modal fade" id="modal-adicionar-preco" style="z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-primary">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-dollar-sign"></i> Adicionar Histórico de Compra</h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="form-adicionar-preco">
+                    <input type="hidden" id="novo-preco-id-produto">
+                    
+                    <div class="form-group">
+                        <label class="font-weight-bold">Fornecedor</label>
+                        <select class="form-control" id="novo-preco-fornecedor" required>
+                            <option value="">Carregando...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="font-weight-bold">Valor da Compra (R$)</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text font-weight-bold bg-light">R$</span>
+                            </div>
+                            <input type="number" class="form-control" id="novo-preco-valor" step="0.01" min="0.01" required>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success w-100 mt-4">
+                        <i class="fas fa-save"></i> Salvar Preço
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL 1: LISTA GERAL DE FORNECEDORES -->
+<div class="modal fade" id="modal-gerenciar-fornecedores" style="z-index: 1050;">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-secondary text-white">
+                <h5 class="modal-title"><i class="fas fa-truck"></i> Gerenciar Fornecedores</h5>
+                <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3 text-right">
+                    <button class="btn btn-success" id="botao-add-fornecedor-crud">
+                        <i class="fas fa-plus"></i> Novo Fornecedor
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered text-center w-100" id="tabela-crud-fornecedores">
+                        <!-- Povoado via JS -->
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL 2: FORMULÁRIO DE CADASTRO / EDIÇÃO -->
+<div class="modal fade" id="modal-form-fornecedor" style="z-index: 1060;">
+    <div class="modal-dialog">
+        <div class="modal-content border-success">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="titulo-modal-fornecedor">Fornecedor</h5>
+                <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-crud-fornecedor">
+                    <input type="hidden" id="crud-fornecedor-id">
+                    
+                    <div class="form-group">
+                        <label class="font-weight-bold">Nome da Empresa / Contato *</label>
+                        <input type="text" class="form-control" id="crud-fornecedor-nome" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 form-group">
+                            <label class="font-weight-bold">WhatsApp</label>
+                            <input type="text" class="form-control" id="crud-fornecedor-whatsapp" placeholder="(00) 00000-0000">
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label class="font-weight-bold">E-mail</label>
+                            <input type="email" class="form-control" id="crud-fornecedor-email" placeholder="vendas@empresa.com">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Forma de Pagamento</label>
+                        <input type="text" class="form-control" id="crud-fornecedor-pagamento" placeholder="Ex: Boleto 30 dias, PIX, Cartão">
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Chave PIX</label>
+                        <input type="text" class="form-control" id="crud-fornecedor-pix">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success w-100 mt-3">
+                        <i class="fas fa-save"></i> Salvar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endif %}
 {% endblock %}
 
@@ -518,84 +658,148 @@ $('#form-adicionar-produto').submit(function(e){
 
 /* EDITAR PRODUTO */
 $('#botao-editar-produto').click(function(){
-
     var selectedRow = table.row('.tableSelected');
 
     if(!selectedRow.data()){
-        Swal.fire({
-            icon: 'error',
-            title: 'Erro',
-            text: 'Selecione um produto.'
-        });
+        Swal.fire({ icon: 'error', title: 'Erro', text: 'Selecione um produto.' });
         return;
     }
 
     var data = selectedRow.data();
-
-    // Preenche os campos do formulário com os dados da linha selecionada
     $('#editar-id').val(data.id);
     $('#editar-nome').val(data.nome);
     $('#editar-codigo').val(data.codigo);
-    
-    // 👇 ADICIONADO: Puxa o saldo e o estoque mínimo
     $('#editar-saldo').val(parseFloat(data.saldo) || 0);
     $('#editar-estoque-minimo').val(parseFloat(data.estoque_minimo) || 0);
 
-    $('#editar-modal').modal('show');
+    // 🔥 Chama a função limpa (sem o botão verde)
+    carregarTabelaPrecos(data.id);
 
+    $('#editar-modal').modal('show');
 });
 
-$('#editar-formulario').submit(function(e){
+// 1. GERAÇÃO DA TABELA (Sem a 4ª coluna)
+function carregarTabelaPrecos(id_produto) {
+    let tbody = $('#tabela-fornecedores-editar tbody');
+    tbody.html('<tr><td colspan="3" class="text-center py-3"><i class="fas fa-spinner fa-spin"></i> Buscando histórico...</td></tr>');
 
+    $.get('/fornecedores_produto', { id_produto: id_produto }, function(response) {
+        tbody.empty(); 
+        if(response.success && response.fornecedores.length > 0) {
+            response.fornecedores.forEach(function(f) {
+                let tr = `
+                    <tr>
+                        <td class="align-middle text-left font-weight-bold">${f.fornecedor_nome}</td>
+                        <td class="align-middle">
+                            <div class="input-group input-group-sm">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text font-weight-bold">R$</span>
+                                </div>
+                                <input type="number" class="form-control input-preco text-right" 
+                                       data-fornecedor="${f.id_fornecedor}" 
+                                       data-original="${f.preco}" 
+                                       value="${f.preco}" step="0.01" min="0">
+                            </div>
+                        </td>
+                        <td class="align-middle cell-data">${f.data_modificacao}</td>
+                    </tr>
+                `;
+                tbody.append(tr);
+            });
+        } else {
+            tbody.append(`
+                <tr>
+                    <td colspan="3" class="text-muted font-italic text-center py-4">
+                        <i class="fas fa-info-circle"></i> Sem histórico de Compra para este item.
+                    </td>
+                </tr>
+            `);
+        }
+    });
+}
+
+// 2. ABRIR MODAL DE ADICIONAR NOVO FORNECEDOR
+$(document).on('click', '#botao-novo-preco', function(e) {
+    e.preventDefault(); 
+    let id_produto = $('#editar-id').val();
+    $('#novo-preco-id-produto').val(id_produto);
+    $('#novo-preco-valor').val('');
+    
+    $.get('/fornecedores', function(res) {
+        let select = $('#novo-preco-fornecedor');
+        select.empty().append('<option value="">Selecione o fornecedor...</option>');
+        if(res.fornecedores) {
+            res.fornecedores.forEach(function(f) {
+                select.append(new Option(f.nome, f.id));
+            });
+        }
+    });
+    $('#modal-adicionar-preco').modal('show');
+});
+
+// 3. SALVAR O NOVO PREÇO VIA MODAL (Função que estava faltando)
+$(document).on('submit', '#form-adicionar-preco', function(e) {
+    e.preventDefault();
+    
+    let id_produto = $('#novo-preco-id-produto').val();
+    let id_fornecedor = $('#novo-preco-fornecedor').val();
+    let preco = $('#novo-preco-valor').val().replace(',', '.');
+
+    $.post('/atualizar_preco_fornecedor', {
+        id_produto: id_produto,
+        id_fornecedor: id_fornecedor,
+        preco: preco
+    }, function(response) {
+        if(response.success) {
+            $('#modal-adicionar-preco').modal('hide');
+            Swal.fire({ icon: 'success', title: 'Adicionado com sucesso!', timer: 1500, showConfirmButton: false });
+            // Atualiza a tabela por baixo imediatamente
+            carregarTabelaPrecos(id_produto);
+        } else {
+            Swal.fire('Erro', response.error, 'error');
+        }
+    });
+});
+
+// 4. ATUALIZAÇÃO DO FORMULÁRIO PRINCIPAL PARA ENVIAR O LOTE DE PREÇOS
+$('#editar-formulario').submit(function(e){
     e.preventDefault();
 
-    $.ajax({
+    let precosAlterados = [];
+    $('#tabela-fornecedores-editar tbody tr').each(function() {
+        let input = $(this).find('.input-preco');
+        if (input.length > 0) {
+            let idFornecedor = input.data('fornecedor');
+            let precoAtual = input.val().replace(',', '.');
+            let precoOriginal = input.data('original');
+            
+            if (precoAtual && parseFloat(precoAtual) !== parseFloat(precoOriginal)) {
+                precosAlterados.push({ id_fornecedor: idFornecedor, preco: precoAtual });
+            }
+        }
+    });
 
+    $.ajax({
         url: '/produtos',
         type: 'PUT',
-
         data: {
-
             id: $('#editar-id').val(),
             nome: $('#editar-nome').val(),
             codigo: $('#editar-codigo').val(),
-            
-            // 👇 ADICIONADO: Envia o saldo e estoque mínimo atualizados para o Python
             saldo: $('#editar-saldo').val(),
-            estoque_minimo: $('#editar-estoque-minimo').val()
-
+            estoque_minimo: $('#editar-estoque-minimo').val(),
+            precos_fornecedores: JSON.stringify(precosAlterados) 
         },
-
         success: function(response){
-
             if(response.success){
-
                 $('#editar-modal').modal('hide');
-
                 table.ajax.reload(null,false);
-
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Operação concluída',
-                    text: 'Produto atualizado com sucesso.',
-                    timer: 1500,
-                    showConfirmButton: false
-                });
-
+                Swal.fire({ icon: 'success', title: 'Atualizado com sucesso.', timer: 1500, showConfirmButton: false });
             } else {
-
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Erro',
-                    text: response.error
-                });
-
+                Swal.fire('Erro', response.error, 'error');
             }
-
         }
-
     });
-
 });
 
 /* INATIVAR PRODUTO (Soft Delete) */
@@ -878,6 +1082,240 @@ $('#botao-historico').click(function() {
         // Se já existe, apenas recarrega os dados
         tabelaHistorico.ajax.reload();
     }
+});
+
+
+// 1. GERAÇÃO DA TABELA (Sem a 4ª coluna e guardando o valor original para comparar)
+function carregarTabelaPrecos(id_produto) {
+    let tbody = $('#tabela-fornecedores-editar tbody');
+    tbody.html('<tr><td colspan="3" class="text-center py-3"><i class="fas fa-spinner fa-spin"></i> Buscando histórico...</td></tr>');
+
+    $.get('/fornecedores_produto', { id_produto: id_produto }, function(response) {
+        tbody.empty(); 
+
+        if(response.success && response.fornecedores.length > 0) {
+            response.fornecedores.forEach(function(f) {
+                let tr = `
+                    <tr>
+                        <td class="align-middle text-left font-weight-bold">${f.fornecedor_nome}</td>
+                        <td class="align-middle">
+                            <div class="input-group input-group-sm">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text font-weight-bold">R$</span>
+                                </div>
+                                <input type="number" class="form-control input-preco text-right" 
+                                       data-fornecedor="${f.id_fornecedor}" 
+                                       data-original="${f.preco}" 
+                                       value="${f.preco}" step="0.01" min="0">
+                            </div>
+                        </td>
+                        <td class="align-middle cell-data">${f.data_modificacao}</td>
+                    </tr>
+                `;
+                tbody.append(tr);
+            });
+        } else {
+            tbody.append(`
+                <tr>
+                    <td colspan="3" class="text-muted font-italic text-center py-4">
+                        <i class="fas fa-info-circle"></i> Sem histórico de Compra para este item.
+                    </td>
+                </tr>
+            `);
+        }
+    });
+}
+
+
+// 2. CORREÇÃO DO BOTÃO ADICIONAR FORNECEDOR (Garante que o clique seja capturado)
+$(document).on('click', '#botao-novo-preco', function(e) {
+    e.preventDefault(); // Impede qualquer comportamento padrão (como enviar form)
+    
+    let id_produto = $('#editar-id').val();
+    $('#novo-preco-id-produto').val(id_produto);
+    $('#novo-preco-valor').val('');
+    
+    $.get('/fornecedores', function(res) {
+        let select = $('#novo-preco-fornecedor');
+        select.empty().append('<option value="">Selecione o fornecedor...</option>');
+        if(res.fornecedores) {
+            res.fornecedores.forEach(function(f) {
+                select.append(new Option(f.nome, f.id));
+            });
+        }
+    });
+
+    $('#modal-adicionar-preco').modal('show');
+});
+
+
+// 3. ATUALIZAÇÃO DO FORMULÁRIO PRINCIPAL PARA ENVIAR OS PREÇOS JUNTO
+$('#editar-formulario').submit(function(e){
+    e.preventDefault();
+
+    // Varre a tabela para pegar os preços alterados
+    let precosAlterados = [];
+    $('#tabela-fornecedores-editar tbody tr').each(function() {
+        let input = $(this).find('.input-preco');
+        if (input.length > 0) {
+            let idFornecedor = input.data('fornecedor');
+            let precoAtual = input.val().replace(',', '.');
+            let precoOriginal = input.data('original'); // Salvo na geração da tabela
+            
+            // Só adiciona na lista se o preço for válido e for DIFERENTE do que estava no banco
+            if (precoAtual && parseFloat(precoAtual) !== parseFloat(precoOriginal)) {
+                precosAlterados.push({ id_fornecedor: idFornecedor, preco: precoAtual });
+            }
+        }
+    });
+
+    $.ajax({
+        url: '/produtos',
+        type: 'PUT',
+        data: {
+            id: $('#editar-id').val(),
+            nome: $('#editar-nome').val(),
+            codigo: $('#editar-codigo').val(),
+            saldo: $('#editar-saldo').val(),
+            estoque_minimo: $('#editar-estoque-minimo').val(),
+            
+            // Transforma o array em um texto JSON para enviar para o Python
+            precos_fornecedores: JSON.stringify(precosAlterados) 
+        },
+        success: function(response){
+            if(response.success){
+                $('#editar-modal').modal('hide');
+                table.ajax.reload(null,false);
+                Swal.fire({
+                    icon: 'success', title: 'Atualizado com sucesso.', 
+                    timer: 1500, showConfirmButton: false
+                });
+            } else {
+                Swal.fire('Erro', response.error, 'error');
+            }
+        }
+    });
+});
+
+/* ==========================================
+   CRUD DE FORNECEDORES
+   ========================================== */
+var tabelaFornecedores = null;
+
+// 1. Abrir Modal Principal e Inicializar Tabela
+$('#botao-gerenciar-fornecedores').click(function() {
+    $('#modal-gerenciar-fornecedores').modal('show');
+    
+    if (tabelaFornecedores === null) {
+        tabelaFornecedores = $('#tabela-crud-fornecedores').DataTable({
+            ajax: { url: '/fornecedores', dataSrc: 'fornecedores' },
+            columns: [
+                { data: "nome", title: "Empresa" },
+                { data: "whatsapp", title: "WhatsApp", defaultContent: "-" },
+                { data: "email", title: "E-mail", defaultContent: "-" },
+                { data: "forma_pagamento", title: "Pagamento", defaultContent: "-" },
+                { data: "chave_pix", title: "Chave PIX", defaultContent: "-" },
+                { 
+                    data: null, title: "Ações", orderable: false,
+                    render: function(data) {
+                        return `
+                            <button class="btn btn-primary btn-sm btn-editar-forn mr-1" title="Editar"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-danger btn-sm btn-apagar-forn" title="Excluir"><i class="fas fa-trash"></i></button>
+                        `;
+                    }
+                }
+            ],
+            language: { url: "/static/js/pt-BR.json" },
+            pageLength: 5,
+            lengthChange: false
+        });
+    } else {
+        tabelaFornecedores.ajax.reload(null, false);
+    }
+});
+
+// 2. Botão Novo Fornecedor (Abre Modal de Form)
+$('#botao-add-fornecedor-crud').click(function() {
+    $('#form-crud-fornecedor')[0].reset();
+    $('#crud-fornecedor-id').val('');
+    $('#titulo-modal-fornecedor').text('Novo Fornecedor');
+    $('#modal-form-fornecedor').modal('show');
+});
+
+// 3. Botão Editar (Preenche os dados e abre form)
+$('#tabela-crud-fornecedores').on('click', '.btn-editar-forn', function() {
+    let data = tabelaFornecedores.row($(this).closest('tr')).data();
+    $('#crud-fornecedor-id').val(data.id);
+    $('#crud-fornecedor-nome').val(data.nome);
+    $('#crud-fornecedor-whatsapp').val(data.whatsapp);
+    $('#crud-fornecedor-email').val(data.email);
+    $('#crud-fornecedor-pagamento').val(data.forma_pagamento);
+    $('#crud-fornecedor-pix').val(data.chave_pix);
+    
+    $('#titulo-modal-fornecedor').text('Editar Fornecedor');
+    $('#modal-form-fornecedor').modal('show');
+});
+
+// 4. Salvar (Detecta automaticamente se é POST ou PUT)
+$('#form-crud-fornecedor').submit(function(e) {
+    e.preventDefault();
+    let id = $('#crud-fornecedor-id').val();
+    let metodo = id ? 'PUT' : 'POST';
+    
+    $.ajax({
+        url: '/fornecedores',
+        type: metodo,
+        data: {
+            id: id,
+            nome: $('#crud-fornecedor-nome').val(),
+            whatsapp: $('#crud-fornecedor-whatsapp').val(),
+            email: $('#crud-fornecedor-email').val(),
+            forma_pagamento: $('#crud-fornecedor-pagamento').val(),
+            chave_pix: $('#crud-fornecedor-pix').val()
+        },
+        success: function(response) {
+            if(response.success) {
+                $('#modal-form-fornecedor').modal('hide');
+                tabelaFornecedores.ajax.reload(null, false);
+                Swal.fire({icon: 'success', title: 'Salvo com sucesso!', timer: 1500, showConfirmButton: false});
+            }
+        }
+    });
+});
+
+// 5. Excluir Fornecedor (Soft Delete)
+$('#tabela-crud-fornecedores').on('click', '.btn-apagar-forn', function() {
+    let data = tabelaFornecedores.row($(this).closest('tr')).data();
+    
+    Swal.fire({
+        title: 'Confirmar exclusão?',
+        text: "O fornecedor '" + data.nome + "' será inativado e deixará de aparecer em novas compras.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonText: 'Cancelar',
+        confirmButtonText: 'Sim, inativar!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: '/fornecedores',
+                type: 'DELETE',
+                data: { id: data.id },
+                success: function(response) {
+                    if(response.success) {
+                        tabelaFornecedores.ajax.reload(null, false);
+                        Swal.fire({icon: 'success', title: 'Fornecedor inativado!', timer: 1500, showConfirmButton: false});
+                    }
+                }
+            });
+        }
+    });
+});
+
+
+// Exportar Tabela de Produtos para CSV
+$('#botao-exportar-produtos').click(function() {
+    window.location.href = '/exportar_produtos_csv';
 });
 
 </script>
