@@ -484,7 +484,7 @@ def produtos():
     if request.method == 'GET':
 
         produtos = databaseOBJ.readRaw("""
-            SELECT id, nome, codigo, saldo, estoque_minimo, ativo
+            SELECT id, nome, codigo, saldo, estoque_minimo, ativo, localizacao
             FROM produtos
             WHERE ativo = true
             ORDER BY nome
@@ -500,16 +500,13 @@ def produtos():
         codigo = request.values.get('codigo')
         saldo = request.values.get('saldo')
         estoque_minimo = request.values.get('estoque_minimo')
-        
-        # Puxa os novos campos do formulário
         id_fornecedor = request.values.get('id_fornecedor')
         preco = request.values.get('preco')
+        localizacao = request.values.get('localizacao')
 
-        # Limpeza para evitar espaços acidentais antes ou depois
         nome = str(nome).strip()
         codigo = str(codigo).strip()
 
-        # 🔥 REGRA: Verifica se já existe QUALQUER produto com esse mesmo código
         existe = databaseOBJ.readRaw("""
             SELECT 1
             FROM produtos
@@ -524,24 +521,32 @@ def produtos():
                 "error": f"Operação bloqueada! O código '{codigo}' já está em uso por outro produto."
             })
 
-        # Insere o produto E já resgata o ID gerado na mesma operação
-        resultado_insert = databaseOBJ.readRaw("""
-            INSERT INTO produtos (nome, codigo, saldo, estoque_minimo)
-            VALUES (%s, %s, %s, %s) RETURNING id
-        """, (nome, codigo, saldo, estoque_minimo))
-
-        # Se o produto foi salvo com sucesso, gravamos o histórico de compra
-        if resultado_insert:
-            id_novo_produto = resultado_insert[0][0]
+        # 🔥 1. writeRaw força a execução imediata do COMMIT no PostgreSQL
+        # 🔥 2. Ativo é declarado como true explícito para as tabelas de listagem
+        try:
+            databaseOBJ.writeRaw("""
+                INSERT INTO produtos (nome, codigo, saldo, estoque_minimo, localizacao, ativo)
+                VALUES (%s, %s, %s, %s, %s, true)
+            """, (nome, codigo, saldo, estoque_minimo, localizacao))
             
-            # Só faz o insert se o usuário preencheu o fornecedor e o preço no form
+            # Se for enviado fornecedor via API, buscamos o ID gerado para vincular
             if id_fornecedor and preco:
-                databaseOBJ.writeRaw("""
-                    INSERT INTO valor_de_compra (id_produto, id_fornecedor, preco_ultima_compra)
-                    VALUES (%s, %s, %s)
-                """, (id_novo_produto, id_fornecedor, preco))
+                produto_salvo = databaseOBJ.readRaw("""
+                    SELECT id FROM produtos WHERE codigo = %s AND ativo = true LIMIT 1
+                """, (codigo,), realdict=True)
+                
+                if produto_salvo:
+                    id_novo = produto_salvo[0]['id']
+                    databaseOBJ.writeRaw("""
+                        INSERT INTO valor_de_compra (id_produto, id_fornecedor, preco_ultima_compra)
+                        VALUES (%s, %s, %s)
+                    """, (id_novo, id_fornecedor, preco))
 
-        return jsonify({"success": True})
+            return jsonify({"success": True})
+            
+        except Exception as e:
+            print("Erro crítico de inserção:", e)
+            return jsonify({"success": False, "error": "Erro interno ao salvar produto."})
 
 
     # ✏️ EDITAR
@@ -552,6 +557,7 @@ def produtos():
         codigo = request.values.get('codigo')
         saldo = request.values.get('saldo')
         estoque_minimo = request.values.get('estoque_minimo')
+        localizacao = request.values.get('localizacao')
 
         try:
             id_produto = int(id_produto)
@@ -586,9 +592,10 @@ def produtos():
             SET nome = %s,
                 codigo = %s,
                 saldo = %s,
-                estoque_minimo = %s
+                estoque_minimo = %s,
+                localizacao = %s
             WHERE id = %s
-        """, (nome, codigo, saldo, estoque_minimo, id_produto))
+        """, (nome, codigo, saldo, estoque_minimo, localizacao, id_produto))
 
         # Processa a lista de preços atualizados vindos da tabela
         precos_json = request.values.get('precos_fornecedores')

@@ -118,6 +118,11 @@
                         <input type="text" class="form-control" id="produto-codigo" required>
                     </div>
 
+                    <div class="form-group">
+                        <label>Localização</label>
+                        <input type="text" class="form-control" id="produto-localizacao">
+                    </div>
+
                     <div class="row">
                         <div class="col-md-6 form-group">
                             <label>Saldo Inicial</label>
@@ -164,6 +169,11 @@
                     <div class="form-group">
                         <label>Código</label>
                         <input type="text" class="form-control" id="editar-codigo" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Localização</label>
+                        <input type="text" class="form-control" id="editar-localizacao">
                     </div>
 
                     <div class="row">
@@ -524,11 +534,12 @@ var table = $('#tabela-produtos').DataTable({
     },
 
     // 3. Força a tabela a nascer ordenada pela coluna de índice 3 (que é a nossa invisível), ordem crescente (asc)
-    order: [[4, 'asc']], 
+    order: [[5, 'asc']], 
 
 columns: [
         { data: "nome", title: "Nome" },           // Índice 0
         { data: "codigo", title: "Código" },       // Índice 1
+        { data: "localizacao", title: "Localização" },
         { 
             data: "saldo", 
             title: "Saldo",
@@ -619,7 +630,8 @@ $('#form-adicionar-produto').submit(function(e){
         
         // campos adicionados
         saldo: $('#produto-saldo').val(),
-        estoque_minimo: $('#produto-estoque-minimo').val()
+        estoque_minimo: $('#produto-estoque-minimo').val(),
+        localizacao: $('#produto-localizacao').val()
 
     }, function(response){
 
@@ -633,6 +645,7 @@ $('#form-adicionar-produto').submit(function(e){
             $('#produto-codigo').val('');
             $('#produto-saldo').val('');
             $('#produto-estoque-minimo').val('');
+            $('#produto-localizacao').val('');
 
             Swal.fire({
                 icon: 'success',
@@ -671,6 +684,7 @@ $('#botao-editar-produto').click(function(){
     $('#editar-codigo').val(data.codigo);
     $('#editar-saldo').val(parseFloat(data.saldo) || 0);
     $('#editar-estoque-minimo').val(parseFloat(data.estoque_minimo) || 0);
+    $('#editar-localizacao').val(data.localizacao);
 
     // 🔥 Chama a função limpa (sem o botão verde)
     carregarTabelaPrecos(data.id);
@@ -786,6 +800,7 @@ $('#editar-formulario').submit(function(e){
             id: $('#editar-id').val(),
             nome: $('#editar-nome').val(),
             codigo: $('#editar-codigo').val(),
+            localizacao: $('#editar-localizacao').val(), // <-- Adicione esta linha!
             saldo: $('#editar-saldo').val(),
             estoque_minimo: $('#editar-estoque-minimo').val(),
             precos_fornecedores: JSON.stringify(precosAlterados) 
@@ -1083,49 +1098,6 @@ $('#botao-historico').click(function() {
         tabelaHistorico.ajax.reload();
     }
 });
-
-
-// 1. GERAÇÃO DA TABELA (Sem a 4ª coluna e guardando o valor original para comparar)
-function carregarTabelaPrecos(id_produto) {
-    let tbody = $('#tabela-fornecedores-editar tbody');
-    tbody.html('<tr><td colspan="3" class="text-center py-3"><i class="fas fa-spinner fa-spin"></i> Buscando histórico...</td></tr>');
-
-    $.get('/fornecedores_produto', { id_produto: id_produto }, function(response) {
-        tbody.empty(); 
-
-        if(response.success && response.fornecedores.length > 0) {
-            response.fornecedores.forEach(function(f) {
-                let tr = `
-                    <tr>
-                        <td class="align-middle text-left font-weight-bold">${f.fornecedor_nome}</td>
-                        <td class="align-middle">
-                            <div class="input-group input-group-sm">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text font-weight-bold">R$</span>
-                                </div>
-                                <input type="number" class="form-control input-preco text-right" 
-                                       data-fornecedor="${f.id_fornecedor}" 
-                                       data-original="${f.preco}" 
-                                       value="${f.preco}" step="0.01" min="0">
-                            </div>
-                        </td>
-                        <td class="align-middle cell-data">${f.data_modificacao}</td>
-                    </tr>
-                `;
-                tbody.append(tr);
-            });
-        } else {
-            tbody.append(`
-                <tr>
-                    <td colspan="3" class="text-muted font-italic text-center py-4">
-                        <i class="fas fa-info-circle"></i> Sem histórico de Compra para este item.
-                    </td>
-                </tr>
-            `);
-        }
-    });
-}
-
 
 // 2. CORREÇÃO DO BOTÃO ADICIONAR FORNECEDOR (Garante que o clique seja capturado)
 $(document).on('click', '#botao-novo-preco', function(e) {
