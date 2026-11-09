@@ -2,133 +2,202 @@
 
 {% block content %}
 
-<body class="login-page">
+<div class="container-fluid p-0 login-page">
 
-    <div class="container-fluid p-0">
+    <div class="bg-login d-flex flex-column justify-content-center align-items-center text-center px-3">
 
-        <div class="bg-login d-flex flex-column justify-content-center align-items-center text-center">
+        <h2 class="system-title mb-4">
+            SISTEMA DE CONTROLE DE <span>ESTOQUE</span>
+        </h2>
 
-            <h2 class="system-title mb-5">
-                SISTEMA DE CONTROLE DE ESTOQUE
-            </h2>
-
-            <div class="login-card col-md-5 col-lg-4 p-5">
-
-                <h4 class="pb-3">Login</h4>
-
-                <form id="loginForm">
-
-                    <div class="form-group pb-3">
-                        <input type="text" class="form-control form-control-lg"
-                               id="user" placeholder="Usuário" required>
-                    </div>
-
-                    <div class="form-group pb-3 position-relative">
-
-                        <input type="password"
-                            class="form-control form-control-lg pr-5"
-                            id="password"
-                            placeholder="Senha"
-                            required>
-
-                        <i class="fas fa-eye"
-                        id="toggleSenha"
-                        style="
-                                position:absolute;
-                                right:20px;
-                                top:40%;
-                                transform:translateY(-50%);
-                                cursor:pointer;
-                                color:#545b61;
-                        ">
-                        </i>
-
-                    </div>
-
-                    <button type="submit"
-                            class="btn btn-info btn-lg w-100 font-weight-bold mt-2">
-                        Entrar
-                    </button>
-
-                </form>
-
+        {% if modo_primeiro_acesso %}
+        <!-- =======================================================
+             TELA BLOQUEANTE DE PRIMEIRO ACESSO (TROCA DE SENHA)
+             ======================================================= -->
+        <div class="login-card col-12 col-md-6 col-lg-4 p-4 p-md-5 text-left">
+            <div class="text-center mb-3">
+                <span class="badge badge-danger px-3 py-2 mb-2" style="font-size: 0.8rem;">
+                    <i class="fas fa-shield-alt mr-1"></i> AÇÃO DE SEGURANÇA OBRIGATÓRIA
+                </span>
+                <h4 class="font-weight-bold text-dark mt-2">Defina sua Nova Senha</h4>
+                <p class="text-muted small mb-0">
+                    Olá, <strong>{{ current_user.usuario }}</strong>. Como este é o seu primeiro acesso com a credencial padrão, cadastre uma nova senha pessoal para liberar o acesso ao sistema.
+                </p>
             </div>
 
+            <form id="primeiroAcessoForm" class="mt-3">
+                <div class="form-group">
+                    <label class="small font-weight-bold text-secondary">Senha Atual (Padrão)</label>
+                    <input type="password" class="form-control form-control-lg" id="pa-senha-atual" placeholder="Digite a senha atual" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="small font-weight-bold text-secondary">Nova Senha (mín. 6 caracteres)</label>
+                    <input type="password" class="form-control form-control-lg" id="pa-nova-senha" minlength="6" placeholder="Digite a nova senha" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="small font-weight-bold text-secondary">Confirmar Nova Senha</label>
+                    <input type="password" class="form-control form-control-lg" id="pa-confirmar-senha" minlength="6" placeholder="Repita a nova senha" required>
+                </div>
+
+                <div id="pa-erro" class="text-danger small font-weight-bold text-center mb-3"></div>
+
+                <button type="submit" class="btn btn-brand btn-lg w-100 font-weight-bold">
+                    <i class="fas fa-lock mr-1"></i> Salvar Senha e Acessar
+                </button>
+            </form>
         </div>
 
-        <!-- COPYRIGHT -->
-        <div class="login-footer text-center">
-            © 2026 Aro Estamparia e Ferramentaria Mecânica Ltda.
+        {% else %}
+        <!-- =======================================================
+             TELA DE LOGIN PADRÃO
+             ======================================================= -->
+        <div class="login-card col-12 col-md-5 col-lg-4 p-4 p-md-5">
+
+            <div class="mb-4">
+                <h4 class="font-weight-bold text-dark mb-1">Acesso ao Sistema</h4>
+                <small class="text-muted">Entre com suas credenciais corporativas</small>
+            </div>
+
+            <form id="loginForm">
+
+                <div class="form-group pb-2 text-left">
+                    <label class="small font-weight-bold text-secondary">Usuário</label>
+                    <input type="text" class="form-control form-control-lg"
+                           id="user" placeholder="Digite seu usuário" required autofocus>
+                </div>
+
+                <div class="form-group pb-2 position-relative text-left">
+                    <label class="small font-weight-bold text-secondary">Senha</label>
+                    <input type="password"
+                        class="form-control form-control-lg pr-5"
+                        id="password"
+                        placeholder="Digite sua senha"
+                        required>
+
+                    <i class="fas fa-eye"
+                       id="toggleSenha"
+                       style="
+                            position:absolute;
+                            right:18px;
+                            top:46px;
+                            cursor:pointer;
+                            color:#6c757d;
+                       ">
+                    </i>
+                </div>
+
+                <button type="submit"
+                        class="btn btn-brand btn-lg w-100 font-weight-bold mt-3">
+                    <i class="fas fa-sign-in-alt mr-1"></i> Entrar
+                </button>
+
+            </form>
+
         </div>
+        {% endif %}
 
     </div>
 
-</body>
+    <div class="login-footer text-center">
+        © {{ now.year }} Aro Estamparia e Ferramentaria Mecânica Ltda. | Maxx Alta Pressão
+    </div>
+
+</div>
 
 {% endblock %}
 
 {% block scripts %}
 
 <script>
-
-    /*Login request*/
+    /* Login request */
     jQuery('#loginForm').on('submit', function (e) {
         e.preventDefault();
         jQuery.ajax({
             url: '/login',
             type: 'POST',
-            data: { 'user': jQuery('#user').val(), 'password': jQuery('#password').val() },
+            data: {
+                'user': jQuery('#user').val(),
+                'password': jQuery('#password').val()
+            },
             success: function (response) {
                 if (response['Login']) {
-                    jQuery('#message').modal('show');
-                    jQuery('#messageText').text('Login efetuado com sucesso');
-                    setTimeout(function () { jQuery('#message').modal('hide') }, 1500);
-                    location.reload();
+                    if (response['force_password_change']) {
+                        window.location.href = response['redirect_url'] || '/primeiro_acesso';
+                    } else {
+                        window.location.href = response['redirect_url'] || '/adm/produtos';
+                    }
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Acesso negado',
+                        text: 'Usuário e/ou senha incorretos.',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
                 }
-                else {
-                    jQuery('#message').modal('show');
-                    jQuery('#messageText').text('Usuário e/ou senha incorretos');
-                    setTimeout(function () { jQuery('#message').modal('hide') }, 1500);
-
-                }
-
             }
         });
     });
 
-    function togglePasswordVisibility() {
-        var passwordInput = document.getElementById("password");
-        var eyeIcon = document.getElementById("eye-icon");
+    /* Primeiro Acesso - Troca de Senha Obrigatória */
+    jQuery('#primeiroAcessoForm').on('submit', function (e) {
+        e.preventDefault();
+        var atual = jQuery('#pa-senha-atual').val();
+        var nova = jQuery('#pa-nova-senha').val();
+        var confirmar = jQuery('#pa-confirmar-senha').val();
 
-        if (passwordInput.type === "password") {
-            passwordInput.type = "text";
-            eyeIcon.classList.remove("fa-eye");
-            eyeIcon.classList.add("fa-eye-slash");
-        } else {
-            passwordInput.type = "password";
-            eyeIcon.classList.remove("fa-eye-slash");
-            eyeIcon.classList.add("fa-eye");
+        jQuery('#pa-erro').text('');
+
+        if (nova.length < 6) {
+            jQuery('#pa-erro').text('A nova senha deve ter no mínimo 6 caracteres.');
+            return;
         }
-    }
+        if (nova !== confirmar) {
+            jQuery('#pa-erro').text('A confirmação da nova senha não confere.');
+            return;
+        }
 
-$('#toggleSenha').on('click', function(){
+        jQuery.ajax({
+            url: '/mudarsenha',
+            type: 'PUT',
+            data: {
+                'currentPassword': atual,
+                'newPassword': nova
+            },
+            success: function (response) {
+                if (response['changeUserPassword']) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Senha atualizada!',
+                        text: 'Acesso liberado. Redirecionando...',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(function () {
+                        window.location.href = '/adm/produtos';
+                    });
+                } else {
+                    jQuery('#pa-erro').text(response['error'] || 'Não foi possível atualizar a senha.');
+                }
+            },
+            error: function (xhr) {
+                var msg = (xhr.responseJSON && xhr.responseJSON.error) ? xhr.responseJSON.error : 'Erro ao atualizar a senha.';
+                jQuery('#pa-erro').text(msg);
+            }
+        });
+    });
 
-    const campoSenha = $('#password');
-
-    if(campoSenha.attr('type') === 'password'){
-
-        campoSenha.attr('type', 'text');
-        $(this).removeClass('fa-eye').addClass('fa-eye-slash');
-
-    } else {
-
-        campoSenha.attr('type', 'password');
-        $(this).removeClass('fa-eye-slash').addClass('fa-eye');
-
-    }
-
-});
-
+    $('#toggleSenha').on('click', function(){
+        const campoSenha = $('#password');
+        if(campoSenha.attr('type') === 'password'){
+            campoSenha.attr('type', 'text');
+            $(this).removeClass('fa-eye').addClass('fa-eye-slash');
+        } else {
+            campoSenha.attr('type', 'password');
+            $(this).removeClass('fa-eye-slash').addClass('fa-eye');
+        }
+    });
 </script>
 
 {% endblock %}

@@ -772,16 +772,17 @@ $('#tabela-ordens').on('click', 'tbody tr', function () {
 
 });
 
-function preencherFormulario(codigo){
+function preencherFormulario(codigoBruto){
+    const codigo = String(codigoBruto || '').trim().replace(/[\x00-\x1F\x7F]/g, '');
 
-    if (codigo.length !== 36){
-        alert("Código inválido");
+    if (!/^\d{36}$/.test(codigo)){
+        msgErro("Código de etiqueta OP inválido (esperado 36 dígitos numéricos).");
         return;
     }
 
-    let numero_op        = codigo.substring(0, 8).replace(/^0+/, '');
-    let numero_qualidade = codigo.substring(8, 16).replace(/^0+/, '');
-    let codigo_produto   = codigo.substring(16, 28).replace(/^0+/, '');
+    let numero_op        = codigo.substring(0, 8).replace(/^0+/, '') || '0';
+    let numero_qualidade = codigo.substring(8, 16).replace(/^0+/, '') || '0';
+    let codigo_produto   = codigo.substring(16, 28).replace(/^0+/, '') || '0';
     let data_raw         = codigo.substring(28, 36);
 
     const data_entrega =
@@ -796,7 +797,7 @@ function preencherFormulario(codigo){
     $.ajax({
         url: '/produto_por_codigo',
         type: 'GET',
-        data: { codigo: codigo_produto },
+        data: { codigo: codigo },
 
         success: function(response){
 

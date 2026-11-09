@@ -1,114 +1,115 @@
 {% extends "base.html" %}
 {% block content %}
 
-<body class="background-page-default"></body>
-    <div class="container-fluid text-black mt-4">
-        <div class="row justify-content-center">
-            <div class="col-12 col-lg-4"></div>
-            <div class="col-6 col-lg-4 d-flex align-items-center justify-content-center">
-                <h4>Clientes</h4>
-            </div>
-            <div class="col-12 col-lg-4 d-flex align-items-center justify-content-end">
-                <button type="button" class="btn btn-success mx-1" id="botao-adicionar">
-                    <i class="fas fa-plus"></i> Adicionar
-                </button>
-                <button type="button" class="btn btn-primary mx-1" id="botao-editar">
-                    <i class="fas fa-edit"></i> Editar
-                </button>
-                <button type="button" class="btn btn-danger mx-1" id="botao-apagar">
-                    <i class="fas fa-trash"></i> Excluir
-                </button>
-            </div>
-        </div>
+<div class="container-fluid mt-4 px-lg-4">
 
-        <div class="row justify-content-center mt-4">
-            <div class="col-12 col-xl-7 px-1 py-1">
-                <div class="card bg-light border-info">
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table text-black text-center" id="tabela-clientes"></table>
-                        </div>
-                    </div>   
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Adicionar -->
-    <div class="modal fade" id="adicionar-modal">
-        <div class="modal-dialog modal-sm">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Adicionar Produto</h5>
-                    <button type="button" class="close" data-dismiss="modal">
-                        <span>&times;</span>
-                    </button>
-                </div>
-
-                <div class="modal-body">
-                    <form id="adicionar-formulario">
-
-                        <div class="form-group">
-                            <label>Nome</label>
-                            <input type="text" class="form-control" id="adicionar-nome" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Código</label>
-                            <input type="text" class="form-control" id="adicionar-codigo" required>
-                            <span class="text-danger" id="codigo-erro"></span>
-                        </div>
-
-                        <button type="submit" class="btn btn-info w-100 mt-3">
-                            Salvar
+    <div class="row justify-content-center mb-3">
+        <div class="col-12 col-xl-9">
+            <div class="card">
+                <div class="card-body py-3 d-flex justify-content-between align-items-center flex-wrap">
+                    <h5 class="mb-0 font-weight-bold text-dark">
+                        <i class="fas fa-building mr-2" style="color: #D90429;"></i> Gestão de Clientes
+                    </h5>
+                    <div class="mt-2 mt-sm-0">
+                        <button type="button" class="btn btn-brand mx-1" id="botao-adicionar">
+                            <i class="fas fa-plus mr-1"></i> Adicionar
                         </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Editar -->
-    <div class="modal fade" id="editar-modal">
-        <div class="modal-dialog modal-sm">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Editar Produto</h5>
-                    <button type="button" class="close" data-dismiss="modal">
-                        <span>&times;</span>
-                    </button>
-                </div>
-
-                <div class="modal-body">
-                    <form id="editar-formulario">
-
-                        <input type="hidden" id="editar-id">
-
-                        <div class="form-group">
-                            <label>Nome</label>
-                            <input type="text" class="form-control" id="editar-nome" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Código</label>
-                            <input type="text" class="form-control" id="editar-codigo" required>
-                        </div>
-
-                        <button type="submit" class="btn btn-info w-100 mt-3">
-                            Salvar
+                        <button type="button" class="btn btn-dark mx-1" id="botao-editar">
+                            <i class="fas fa-edit mr-1"></i> Editar
                         </button>
-
-                    </form>
+                        <button type="button" class="btn btn-danger mx-1" id="botao-apagar">
+                            <i class="fas fa-trash mr-1"></i> Excluir
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <div class="row justify-content-center">
+        <div class="col-12 col-xl-9">
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table text-center" id="tabela-clientes"></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Modal Adicionar -->
+<div class="modal fade" id="adicionar-modal">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-plus mr-2"></i> Adicionar Cliente</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <form id="adicionar-formulario">
+                    <div class="form-group">
+                        <label class="font-weight-bold">Nome</label>
+                        <input type="text" class="form-control" id="adicionar-nome" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="font-weight-bold">Código</label>
+                        <input type="text" class="form-control" id="adicionar-codigo" required>
+                        <span class="text-danger small" id="codigo-erro"></span>
+                    </div>
+
+                    <button type="submit" class="btn btn-brand w-100 mt-3">
+                        <i class="fas fa-save mr-1"></i> Salvar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar -->
+<div class="modal fade" id="editar-modal">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-edit mr-2"></i> Editar Cliente</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <form id="editar-formulario">
+                    <input type="hidden" id="editar-id">
+
+                    <div class="form-group">
+                        <label class="font-weight-bold">Nome</label>
+                        <input type="text" class="form-control" id="editar-nome" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="font-weight-bold">Código</label>
+                        <input type="text" class="form-control" id="editar-codigo" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-brand w-100 mt-3">
+                        <i class="fas fa-save mr-1"></i> Atualizar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
 {% endblock %}
-{% block scripts %} 
-
+{% block scripts %}
 <script>
-
 var table = $('#tabela-clientes').DataTable({
     ajax: {
         url: '/clientes',
@@ -120,13 +121,12 @@ var table = $('#tabela-clientes').DataTable({
         url: "/static/js/pt-BR.json" 
     },
     columns: [
-        { data: "nome", title: "Nome" },
-        { data: "codigo", title: "Código" }
+        { data: "nome", title: "Nome", render: function(d) { return '<strong>' + escapeHtml(d) + '</strong>'; } },
+        { data: "codigo", title: "Código", render: function(d) { return '<code>' + escapeHtml(d) + '</code>'; } }
     ]
 });
 
 $('#tabela-clientes').on('click', 'tbody tr', function () {
-
     var row = table.row(this);
     if (!row.data()) return;
 
@@ -135,6 +135,7 @@ $('#tabela-clientes').on('click', 'tbody tr', function () {
 });
 
 $('#botao-adicionar').click(function(){
+    $('#adicionar-formulario')[0].reset();
     $('#adicionar-modal').modal('show');
 });
 
@@ -147,42 +148,25 @@ $('#adicionar-formulario').submit(function(e){
     }, function(response){
         if(response.success){
             $('#adicionar-modal').modal('hide');
-                        Swal.fire({
-                icon: 'success',
-                title: 'Operação concluída',
-                text: 'Cliente cadastrado com sucesso.',
-                timer: 1500,
-                showConfirmButton: false
-            });
+            msgSucesso('Cliente cadastrado com sucesso.');
             table.ajax.reload(null, false);
         } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Erro',
-                text: response.error
-            });
+            msgErro(response.error);
         }
     });
 });
 
 $('#botao-editar').click(function(){
-
     var selectedRow = table.row('.tableSelected');
     if(!selectedRow.data()){
-        Swal.fire({
-            icon: 'error',
-            title: 'Erro',
-            text: "Selecione um cliente."
-        });
+        msgAviso("Selecione um cliente na tabela primeiro.");
         return;
     }
 
     var data = selectedRow.data();
-
     $('#editar-id').val(data.id);
     $('#editar-nome').val(data.nome);
     $('#editar-codigo').val(data.codigo);
-
     $('#editar-modal').modal('show');
 });
 
@@ -198,75 +182,53 @@ $('#editar-formulario').submit(function(e){
             codigo: $('#editar-codigo').val()
         },
         success: function(response){
-
             if(response.success){
-
                 $('#editar-modal').modal('hide');
                 table.ajax.reload(null, false);
-
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Operação concluída',
-                    text: 'Cliente atualizado com sucesso.',
-                    timer: 1500,
-                    showConfirmButton: false
-                });
-
+                msgSucesso('Cliente atualizado com sucesso.');
             } else {
-
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Erro',
-                    text: response.error
-                });
-
+                msgErro(response.error);
             }
         }
-                
     });
 });
 
 $('#botao-apagar').click(function(){
-
     var selectedRow = table.row('.tableSelected');
     if(!selectedRow.data()){
-        Swal.fire({
-            icon: 'error',
-            title: 'Erro',
-            text: "Selecione um cliente."
-        });
+        msgAviso("Selecione um cliente na tabela primeiro.");
         return;
     }
 
     var data = selectedRow.data();
 
-    $.ajax({
-        url: '/clientes',
-        type: 'DELETE',
-        data: { id: data.id },
-        success: function(){
-            table.ajax.reload(null, false);
-            Swal.fire({
-                icon: 'success',
-                title: 'Operação concluída',
-                text: 'Cliente excluído com sucesso.',
-                timer: 1500,
-                showConfirmButton: false
+    Swal.fire({
+        title: 'Inativar Cliente?',
+        text: "Deseja realmente remover o cliente '" + data.nome + "'?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#D90429',
+        cancelButtonText: 'Cancelar',
+        confirmButtonText: 'Sim, remover!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: '/clientes',
+                type: 'DELETE',
+                data: { id: data.id },
+                success: function(){
+                    table.ajax.reload(null, false);
+                    msgSucesso('Cliente excluído com sucesso.');
+                }
             });
         }
     });
 });
 
 $(document).on('click', function(e){
-
-    if (!$(e.target).closest('#tabela-clientes').length) {
-
+    if (!$(e.target).closest('#tabela-clientes, .modal, .btn').length) {
         table.$('tr.tableSelected').removeClass('tableSelected');
-
     }
-
 });
-
 </script>
-
-{% endblock %}  
+{% endblock %}

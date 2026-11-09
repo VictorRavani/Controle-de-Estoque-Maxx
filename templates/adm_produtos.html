@@ -1,29 +1,30 @@
 {% extends "base.html" %}
 {% block content %}
 
-<body class="background-page-default"></body>
-
 {% if current_user.privileges == 1 %}
-<!-- ==========================================
-     TELA EXCLUSIVA DO OPERADOR (Leitura Contínua)
-     ========================================== -->
+<!-- ==========================================================================
+     TELA EXCLUSIVA DO OPERADOR (Leitura Contínua de Código de Barras)
+     ========================================================================== -->
 <div class="container-fluid mt-5">
     <div class="row justify-content-center">
-        <div class="col-md-6 text-center">
-            <h2 class="mb-4 text-dark"><i class="fas fa-barcode"></i> Baixa Rápida de Estoque</h2>
-            
-            <div class="card shadow-lg border-info" style="border-width: 2px;">
-                <div class="card-body py-5">
-                    <h5 class="text-secondary mb-4">Aguardando leitura do código de barras...</h5>
-                    
-                    <!-- Campo onde o leitor vai injetar o código automaticamente -->
-                    <input type="text" id="operador-barcode" class="form-control form-control-lg text-center bg-light font-weight-bold" 
-                           style="font-size: 2.5rem; border: 3px solid #17a2b8; height: 80px;" 
-                           placeholder="Bipe aqui" autofocus autocomplete="off">
-                    
-                    <!-- Painel de resposta (Sucesso ou Erro) -->
-                    <div id="operador-status" class="mt-4 p-3 rounded shadow-sm" style="font-size: 1.3rem; display: none;">
-                    </div>
+        <div class="col-md-7 col-lg-5 text-center">
+            <h3 class="mb-4 font-weight-bold text-dark">
+                <i class="fas fa-barcode mr-2" style="color: #D90429;"></i> Baixa Rápida de Estoque
+            </h3>
+
+            <div class="card shadow-sm">
+                <div class="card-body py-5 px-4">
+                    <p class="text-secondary mb-4 font-weight-bold">
+                        Aponte o leitor de código de barras (EAN-13, Código Interno ou Etiqueta OP)
+                    </p>
+
+                    <input type="text" id="operador-barcode"
+                           class="form-control form-control-lg text-center bg-light font-weight-bold"
+                           style="font-size: 2rem; border: 2px solid #1F242D; height: 72px;"
+                           placeholder="Bipe o código aqui..." autofocus autocomplete="off">
+
+                    <div id="operador-status" class="mt-4 p-3 rounded" style="font-size: 1.15rem; display: none;"></div>
+                    <div id="operador-alerta-estoque" class="mt-3 p-2 rounded" style="font-size: 0.95rem; display: none;"></div>
                 </div>
             </div>
         </div>
@@ -31,75 +32,227 @@
 </div>
 
 {% else %}
-<!-- ==========================================
-     TELA ORIGINAL DO ADMINISTRADOR / PCP
-========================================== -->
+<!-- ==========================================================================
+     TELA GERENCIAL DO ADMINISTRADOR / PCP (Dashboard + Controle de Estoque)
+     ========================================================================== -->
+<div class="container-fluid mt-4 px-lg-4">
 
-<!-- BOTÕES DA TELA E TABELA -->
-<div class="container-fluid text-black mt-4">
-    <div class="row justify-content-center">
-        <div class="col-12 col-lg-4"></div>
-
-        <div class="col-6 col-lg-4 d-flex align-items-center justify-content-center">
-            <h4>Produtos</h4>
-        </div>
-
-        <div class="col-12 col-lg-4 d-flex align-items-center justify-content-end">
-
-            <button type="button" class="btn btn-dark mx-1" id="botao-exportar-produtos">
-                <i class="fas fa-file-csv"></i> Exportar
-            </button>
-
-            <button type="button" class="btn btn-custom mx-1" id="botao-registrar_saida">
-                <i class="fas fa-arrow-up"></i> Registrar saída
-            </button>
-
-            <button type="button" class="btn btn-secondary mx-1" id="botao-gerenciar-fornecedores">
-                <i class="fas fa-truck"></i> Fornecedores
-            </button>
-
-            <button type="button" class="btn btn-success mx-1" id="botao-adicionar-produto">
-                <i class="fas fa-plus"></i> Adicionar
-            </button>
-
-            <button type="button" class="btn btn-primary mx-1" id="botao-editar-produto">
-                <i class="fas fa-edit"></i> Editar
-            </button>
-
-            <button type="button" class="btn btn-info mx-1" id="botao-historico">
-                <i class="fas fa-history"></i> Histórico
-            </button>
-
-            <button type="button" class="btn btn-danger mx-1" id="botao-apagar-produto">
-                <i class="fas fa-trash"></i> Excluir
-            </button>
-
-        </div>
-    </div>
-
-    <div class="row justify-content-center mt-4">
-        <div class="col-12 col-xl-7 px-1 py-1">
-            <div class="card bg-light border-info">
-                <div class="card-body">
-
-                    <div class="table-responsive">
-                        <table class="table text-black text-center" id="tabela-produtos"></table>
+    <!-- 1. DASHBOARD RESUMIDO (KPIs FINANCEIROS, ALERTAS E GIRO) -->
+    <div class="row mb-3">
+        <div class="col-12 col-sm-6 col-xl-3 mb-3">
+            <div class="kpi-card kpi-dark">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="kpi-label">Itens Ativos no Catálogo</div>
+                        <div class="kpi-value" id="kpi-total-produtos">0</div>
+                        <small class="text-muted">Volume físico: <strong id="kpi-total-unidades">0</strong> un.</small>
                     </div>
+                    <div class="kpi-icon"><i class="fas fa-boxes"></i></div>
+                </div>
+            </div>
+        </div>
 
+        <div class="col-12 col-sm-6 col-xl-3 mb-3">
+            <div class="kpi-card kpi-danger" style="cursor: pointer;" id="card-kpi-criticos" title="Clique para filtrar itens críticos">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="kpi-label">Alertas de Falta / Críticos</div>
+                        <div class="kpi-value text-brand-red" id="kpi-qtd-criticos">0</div>
+                        <small class="text-muted">Em atenção (+50%): <strong id="kpi-qtd-atencao">0</strong> itens</small>
+                    </div>
+                    <div class="kpi-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3 mb-3">
+            <div class="kpi-card kpi-dark">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="kpi-label">Resumo Financeiro em Estoque</div>
+                        <div class="kpi-value" id="kpi-valor-estoque">R$ 0,00</div>
+                        <small class="text-muted">Reposição crítica: <strong class="text-danger" id="kpi-custo-reposicao">R$ 0,00</strong></small>
+                    </div>
+                    <div class="kpi-icon"><i class="fas fa-coins"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3 mb-3">
+            <div class="kpi-card kpi-dark">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="kpi-label">Movimentações Hoje</div>
+                        <div class="kpi-value" id="kpi-movs-hoje">0</div>
+                        <button type="button" class="btn btn-link btn-sm p-0 text-danger font-weight-bold" data-toggle="collapse" data-target="#painel-detalhes-dashboard">
+                            <i class="fas fa-chart-bar mr-1"></i> Ver Mais Movimentados & Alertas
+                        </button>
+                    </div>
+                    <div class="kpi-icon"><i class="fas fa-exchange-alt"></i></div>
                 </div>
             </div>
         </div>
     </div>
-    
+
+    <!-- PAINEL EXPANSÍVEL DO DASHBOARD: ALERTAS DE FALTA E ITENS MAIS MOVIMENTADOS -->
+    <div class="collapse mb-4" id="painel-detalhes-dashboard">
+        <div class="row">
+            <!-- Coluna 1: Alertas de Falta / Estoque Crítico -->
+            <div class="col-12 col-lg-6 mb-3 mb-lg-0">
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <span><i class="fas fa-bell text-danger mr-2"></i> Alertas de Falta (Abaixo do Estoque Mínimo)</span>
+                        <span class="badge badge-danger" id="badge-count-criticos">0</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive" style="max-height: 240px; overflow-y: auto;">
+                            <table class="table table-sm table-hover mb-0 text-center">
+                                <thead>
+                                    <tr>
+                                        <th class="text-left pl-3">Produto</th>
+                                        <th>Código</th>
+                                        <th>Saldo</th>
+                                        <th>Mínimo</th>
+                                        <th>Falta</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-dashboard-criticos">
+                                    <tr><td colspan="5" class="text-muted py-3">Carregando alertas...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coluna 2: Itens Mais Movimentados -->
+            <div class="col-12 col-lg-6">
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <span><i class="fas fa-fire text-danger mr-2"></i> Itens Mais Movimentados (Giro de Estoque)</span>
+                        <small class="text-muted">Top 6 Produtos</small>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive" style="max-height: 240px; overflow-y: auto;">
+                            <table class="table table-sm table-hover mb-0 text-center">
+                                <thead>
+                                    <tr>
+                                        <th class="text-left pl-3">Produto</th>
+                                        <th>Operações</th>
+                                        <th>Entradas</th>
+                                        <th>Saídas</th>
+                                        <th>Volume Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-dashboard-movimentados">
+                                    <tr><td colspan="5" class="text-muted py-3">Carregando ranking...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. BARRA DE TÍTULO, FILTROS (STATUS E FORNECEDOR) E AÇÕES -->
+    <div class="card mb-4">
+        <div class="card-body py-3">
+            <div class="row align-items-center">
+                <!-- Filtros rápidos de criticidade e fornecedor -->
+                <div class="col-12 col-xl-5 mb-2 mb-xl-0 d-flex align-items-center flex-wrap" style="gap: 8px;">
+                    <div class="d-flex align-items-center">
+                        <span class="font-weight-bold mr-2 text-dark"><i class="fas fa-filter mr-1"></i> Status:</span>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button type="button" class="btn btn-dark active filtro-status-btn" data-status="todos">Todos</button>
+                            <button type="button" class="btn btn-secondary filtro-status-btn" data-status="critico">
+                                🔴 Críticos
+                            </button>
+                            <button type="button" class="btn btn-secondary filtro-status-btn" data-status="atencao">
+                                🟡 Atenção
+                            </button>
+                            <button type="button" class="btn btn-secondary filtro-status-btn" data-status="ok">
+                                🟢 OK
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-center ml-xl-2">
+                        <label for="filtro-fornecedor-tabela" class="font-weight-bold mr-2 mb-0 text-dark">
+                            <i class="fas fa-truck mr-1 text-danger"></i> Fornecedor:
+                        </label>
+                        <select id="filtro-fornecedor-tabela" class="form-control form-control-sm" style="min-width: 195px; max-width: 240px;">
+                            <option value="todos">Todos os Fornecedores</option>
+                            <option value="sem_fornecedor">Sem Fornecedor Cadastrado</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Botões de Ação -->
+                <div class="col-12 col-xl-7 d-flex align-items-center justify-content-xl-end flex-wrap" style="gap: 6px;">
+                    <button type="button" class="btn btn-brand" id="botao-registrar_saida">
+                        <i class="fas fa-exchange-alt mr-1"></i> Movimentar Estoque
+                    </button>
+
+                    <button type="button" class="btn btn-brand" id="botao-lista-compras-pdf" title="Gerar Lista de Compras em PDF por Status ou Fornecedor">
+                        <i class="fas fa-file-pdf mr-1"></i> Lista de Compras (PDF)
+                    </button>
+
+                    <button type="button" class="btn btn-dark" id="botao-adicionar-produto">
+                        <i class="fas fa-plus mr-1"></i> Adicionar
+                    </button>
+
+                    <button type="button" class="btn btn-dark" id="botao-editar-produto">
+                        <i class="fas fa-edit mr-1"></i> Editar
+                    </button>
+
+                    <button type="button" class="btn btn-secondary" id="botao-importar-planilha">
+                        <i class="fas fa-file-excel mr-1 text-danger"></i> Importar Lote
+                    </button>
+
+                    <button type="button" class="btn btn-secondary" id="botao-exportar-produtos">
+                        <i class="fas fa-file-csv mr-1"></i> Exportar
+                    </button>
+
+                    <button type="button" class="btn btn-secondary" id="botao-historico">
+                        <i class="fas fa-history mr-1"></i> Histórico
+                    </button>
+
+                    <button type="button" class="btn btn-secondary" id="botao-gerenciar-fornecedores">
+                        <i class="fas fa-truck mr-1"></i> Fornecedores
+                    </button>
+
+                    <button type="button" class="btn btn-danger" id="botao-apagar-produto" title="Inativar Produto">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. TABELA PRINCIPAL DE PRODUTOS -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table text-center" id="tabela-produtos"></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
-<!-- MODAL ADICIONAR PRODUTO -->
+<!-- ==========================================================================
+     MODAL 1: ADICIONAR PRODUTO (COM GERADOR DE CÓDIGO EAN-13)
+     ========================================================================== -->
 <div class="modal fade" id="modal-adicionar-produto">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-
             <div class="modal-header">
-                <h5 class="modal-title">Adicionar Produto</h5>
+                <h5 class="modal-title"><i class="fas fa-box mr-2"></i> Adicionar Produto</h5>
                 <button type="button" class="close" data-dismiss="modal">
                     <span>&times;</span>
                 </button>
@@ -107,126 +260,153 @@
 
             <div class="modal-body">
                 <form id="form-adicionar-produto">
-
                     <div class="form-group">
-                        <label>Descrição</label>
+                        <label class="font-weight-bold">Descrição / Nome do Produto *</label>
                         <input type="text" class="form-control" id="produto-nome" required>
                     </div>
 
-                    <div class="form-group">
-                        <label>Código</label>
-                        <input type="text" class="form-control" id="produto-codigo" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Localização</label>
-                        <input type="text" class="form-control" id="produto-localizacao">
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 form-group">
-                            <label>Saldo Inicial</label>
-                            <input type="number" class="form-control" id="produto-saldo" step="1" min="0" required>
+                    <div class="form-row">
+                        <div class="col-md-7 form-group">
+                            <label class="font-weight-bold">Código de Barras (EAN / Interno) *</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="produto-codigo" placeholder="Bipe o código ou gere um interno" required>
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-secondary" id="btn-gerar-codigo-add" title="Gerar código EAN-13 interno único">
+                                        <i class="fas fa-magic mr-1"></i> Gerar EAN-13
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-6 form-group">
-                            <label>Estoque Mínimo</label>
-                            <input type="number" class="form-control" id="produto-estoque-minimo" step="1" min="0" required>
+
+                        <div class="col-md-5 form-group">
+                            <label class="font-weight-bold">Localização / Endereço</label>
+                            <input type="text" class="form-control" id="produto-localizacao" placeholder="Ex: Corredor A - Prat. 02">
                         </div>
                     </div>
 
-                    <button type="submit" class="btn btn-info w-100 mt-3">
-                        Salvar
+                    <div class="form-row">
+                        <div class="col-md-6 form-group">
+                            <label class="font-weight-bold">Saldo Inicial *</label>
+                            <input type="number" class="form-control" id="produto-saldo" step="any" min="0" value="0" required>
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label class="font-weight-bold">Estoque Mínimo (Alerta Crítico) *</label>
+                            <input type="number" class="form-control" id="produto-estoque-minimo" step="any" min="0" value="0" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="col-md-7 form-group">
+                            <label class="font-weight-bold">Fornecedor Inicial <small class="text-muted">(Opcional)</small></label>
+                            <select class="form-control" id="produto-fornecedor">
+                                <option value="">Nenhum fornecedor selecionado...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-5 form-group">
+                            <label class="font-weight-bold">Preço de Compra (R$) <small class="text-muted">(Opcional)</small></label>
+                            <input type="number" class="form-control" id="produto-preco" step="0.01" min="0" placeholder="0,00">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-brand w-100 mt-3">
+                        <i class="fas fa-save mr-1"></i> Salvar Produto
                     </button>
-
                 </form>
             </div>
         </div>
     </div>
 </div>
 
+<!-- ==========================================================================
+     MODAL 2: EDITAR PRODUTO + HISTÓRICO DE FORNECEDORES
+     ========================================================================== -->
 <div class="modal fade" id="editar-modal">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-
             <div class="modal-header">
-                <h5 class="modal-title">Editar Produto</h5>
+                <h5 class="modal-title"><i class="fas fa-edit mr-2"></i> Editar Produto</h5>
                 <button type="button" class="close" data-dismiss="modal">
                     <span>&times;</span>
                 </button>
             </div>
 
             <div class="modal-body">
-
                 <form id="editar-formulario">
-
                     <input type="hidden" id="editar-id">
 
                     <div class="form-group">
-                        <label>Descrição</label>
+                        <label class="font-weight-bold">Descrição / Nome do Produto *</label>
                         <input type="text" class="form-control" id="editar-nome" required>
                     </div>
 
-                    <div class="form-group">
-                        <label>Código</label>
-                        <input type="text" class="form-control" id="editar-codigo" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Localização</label>
-                        <input type="text" class="form-control" id="editar-localizacao">
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 form-group">
-                            <label>Saldo</label>
-                            <input type="number" class="form-control" id="editar-saldo" step="1" min="0" required>
+                    <div class="form-row">
+                        <div class="col-md-7 form-group">
+                            <label class="font-weight-bold">Código de Barras *</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="editar-codigo" required>
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-secondary" id="btn-gerar-codigo-edit" title="Gerar código EAN-13 interno">
+                                        <i class="fas fa-magic mr-1"></i> Gerar EAN-13
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-6 form-group">
-                            <label>Estoque Mínimo</label>
-                            <input type="number" class="form-control" id="editar-estoque-minimo" step="1" min="0" required>
+
+                        <div class="col-md-5 form-group">
+                            <label class="font-weight-bold">Localização</label>
+                            <input type="text" class="form-control" id="editar-localizacao">
                         </div>
                     </div>
 
-                    <hr class="mt-4 mb-3">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h6 class="text-secondary font-weight-bold mb-0"><i class="fas fa-list"></i> Histórico de Fornecedores</h6>
-                        <button type="button" class="btn btn-sm btn-primary" id="botao-novo-preco">
-                            <i class="fas fa-plus"></i> Adicionar Fornecedor
+                    <div class="form-row">
+                        <div class="col-md-6 form-group">
+                            <label class="font-weight-bold">Saldo Atual (Alterações geram log de Ajuste)</label>
+                            <input type="number" class="form-control" id="editar-saldo" step="any" min="0" required>
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label class="font-weight-bold">Estoque Mínimo</label>
+                            <input type="number" class="form-control" id="editar-estoque-minimo" step="any" min="0" required>
+                        </div>
+                    </div>
+
+                    <hr class="mt-3 mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="text-dark font-weight-bold mb-0"><i class="fas fa-tags mr-1 text-danger"></i> Histórico de Preços por Fornecedor</h6>
+                        <button type="button" class="btn btn-sm btn-dark" id="botao-novo-preco">
+                            <i class="fas fa-plus mr-1"></i> Vincular Fornecedor/Preço
                         </button>
                     </div>
 
-                    <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                    <div class="table-responsive" style="max-height: 260px; overflow-y: auto;">
                         <table class="table table-sm table-bordered table-hover text-center" id="tabela-fornecedores-editar">
-                            <thead class="thead-light">
+                            <thead>
                                 <tr>
                                     <th class="align-middle">Fornecedor</th>
-                                    <th class="align-middle" style="width: 140px;">Valor (R$)</th>
-                                    <th class="align-middle" style="width: 150px;">Última Atualização</th>
+                                    <th class="align-middle" style="width: 150px;">Valor (R$)</th>
+                                    <th class="align-middle" style="width: 160px;">Última Atualização</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <!-- As linhas serão injetadas via JavaScript -->
-                            </tbody>
+                            <tbody></tbody>
                         </table>
                     </div>
 
-                    <button type="submit" class="btn btn-primary w-100 mt-3">
-                        Atualizar
+                    <button type="submit" class="btn btn-brand w-100 mt-3">
+                        <i class="fas fa-save mr-1"></i> Salvar Alterações
                     </button>
-
                 </form>
-
             </div>
-
         </div>
     </div>
 </div>
 
+<!-- ==========================================================================
+     MODAL 3: REGISTRAR MOVIMENTAÇÃO (SAÍDA, ENTRADA OU AJUSTE + LEITOR DE BARRAS)
+     ========================================================================== -->
 <div class="modal fade" id="registrar-saida-modal" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Registrar Saída de Estoque</h5>
+                <h5 class="modal-title"><i class="fas fa-exchange-alt mr-2"></i> Registrar Movimentação de Estoque</h5>
                 <button type="button" class="close" data-dismiss="modal">
                     <span>&times;</span>
                 </button>
@@ -235,40 +415,75 @@
             <div class="modal-body">
                 <form id="formulario-registrar-saida">
 
-                    <div class="text-center mb-4">
-                        <div class="mb-3">
-                            <i class="fas fa-box-open fa-3x text-warning"></i>
-                        </div>
-
-                        <div class="d-flex justify-content-center gap-2">
-                            <button type="button" class="btn btn-success btn-sm mr-2" id="botao-scan-barcode-saida">
-                                <i class="fas fa-barcode"></i> Ler Código de Barras
-                            </button>
-                            <button type="button" class="btn btn-primary btn-sm mr-2" id="botao-manual-saida">
-                                <i class="fas fa-keyboard"></i> Manual
-                            </button>
-                            <button type="button" class="btn btn-danger btn-sm" id="botao-limpar-form-saida">
-                                <i class="fas fa-trash-alt"></i> Limpar
-                            </button>
+                    <!-- Seleção do Tipo de Movimentação -->
+                    <div class="form-group mb-3">
+                        <label class="font-weight-bold text-dark d-block">Tipo de Operação:</label>
+                        <div class="btn-group btn-group-toggle w-100" data-toggle="buttons">
+                            <label class="btn btn-secondary active" id="lbl-op-saida">
+                                <input type="radio" name="tipo_operacao_mov" value="1" checked>
+                                <i class="fas fa-arrow-up text-danger mr-1"></i> Saída / Retirada
+                            </label>
+                            <label class="btn btn-secondary" id="lbl-op-entrada">
+                                <input type="radio" name="tipo_operacao_mov" value="0">
+                                <i class="fas fa-arrow-down text-success mr-1"></i> Entrada
+                            </label>
+                            <label class="btn btn-secondary" id="lbl-op-ajuste">
+                                <input type="radio" name="tipo_operacao_mov" value="2">
+                                <i class="fas fa-sliders-h text-dark mr-1"></i> Ajuste Inventário
+                            </label>
                         </div>
                     </div>
 
-                    <div class="form-group mb-4">
-                        <label for="saida_id_produto" class="font-weight-bold text-secondary">Produto Selecionado:</label>
+                    <!-- Método de Seleção do Produto -->
+                    <div class="d-flex justify-content-center mb-3" style="gap: 8px;">
+                        <button type="button" class="btn btn-dark btn-sm" id="botao-scan-barcode-saida">
+                            <i class="fas fa-barcode mr-1"></i> Ler Código de Barras
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="botao-manual-saida">
+                            <i class="fas fa-search mr-1"></i> Busca Manual
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="botao-limpar-form-saida">
+                            <i class="fas fa-eraser mr-1"></i> Limpar
+                        </button>
+                    </div>
+
+                    <!-- Caixa dedicada para Leitura de Código de Barras (sem prompt bloqueante) -->
+                    <div id="box-leitor-modal" class="form-group p-3 rounded bg-light border mb-3" style="display: none;">
+                        <label class="small font-weight-bold text-dark mb-1">
+                            <i class="fas fa-Crosshairs text-danger mr-1"></i> Bipe ou digite o código de barras e pressione Enter:
+                        </label>
+                        <div class="input-group">
+                            <input type="text" class="form-control font-weight-bold text-center" id="input-barcode-saida"
+                                   placeholder="EAN-13, Código Interno ou Etiqueta 36 dígitos..." autocomplete="off">
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-brand" id="btn-confirmar-barcode-saida">Buscar</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="saida_id_produto" class="font-weight-bold text-dark">Produto Selecionado:</label>
                         <select class="form-control" id="saida_id_produto" name="id_produto" required disabled>
-                            <option value="">Aguardando seleção do método...</option>
+                            <option value="">Selecione o modo de leitura acima...</option>
                         </select>
+                        <small id="info-saldo-selecionado" class="form-text text-muted"></small>
                     </div>
 
-                    <div class="form-group row mb-4">
-                        <label for="saida_quantidade" class="col-4 col-form-label font-weight-bold text-secondary">Quantidade:</label>
-                        <div class="col-8">
-                            <input type="number" class="form-control" id="saida_quantidade" name="quantidade" step="1" min="1" required>
+                    <div class="form-row">
+                        <div class="col-md-5 form-group">
+                            <label for="saida_quantidade" id="label-qtd-mov" class="font-weight-bold text-dark">Quantidade *</label>
+                            <input type="number" class="form-control" id="saida_quantidade" name="quantidade" step="any" min="0" required>
+                        </div>
+                        <div class="col-md-7 form-group">
+                            <label for="saida_observacao" class="font-weight-bold text-dark">Observação / Motivo</label>
+                            <input type="text" class="form-control" id="saida_observacao" name="observacao" placeholder="Ex: NF 1042, Requisição Setor...">
                         </div>
                     </div>
 
                     <div class="text-right mt-3 border-top pt-3">
-                        <button type="submit" class="btn btn-success px-4">Confirmar Saída</button>
+                        <button type="submit" class="btn btn-brand px-4 w-100">
+                            <i class="fas fa-check-circle mr-1"></i> Confirmar Movimentação
+                        </button>
                     </div>
                 </form>
             </div>
@@ -276,20 +491,72 @@
     </div>
 </div>
 
-<!-- MODAL HISTÓRICO DE MOVIMENTAÇÕES -->
+<!-- ==========================================================================
+     MODAL 4: IMPORTAÇÃO EM LOTE VIA PLANILHA EXCEL (.XLSX) OU CSV (.CSV)
+     ========================================================================== -->
+<div class="modal fade" id="modal-importar-planilha" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-file-excel mr-2"></i> Importação em Lote via Excel / CSV</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-secondary border small mb-3">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap">
+                        <div>
+                            <strong><i class="fas fa-info-circle text-danger mr-1"></i> Instruções de Importação:</strong>
+                            <ul class="mb-0 pl-3 mt-1">
+                                <li>Formato recomendado: <strong>.xlsx (Planilha nativa do Excel)</strong> — evita conversão para notação científica (<code>7,89E+12</code>) e conflitos de separador. Também aceita <strong>.csv</strong> (<code>;</code> ou <code>,</code>).</li>
+                                <li>Coluna obrigatória: <strong>Produto</strong> (ou <em>Nome</em> / <em>Descrição</em>).</li>
+                                <li>Colunas opcionais: <strong>Código de Barras</strong>, <strong>Código</strong>, <strong>Saldo Atual</strong>, <strong>Estoque Mínimo</strong>, <strong>Localização</strong>, <strong>Fornecedor</strong> e <strong>Preço (R$)</strong>.</li>
+                                <li>Itens sem código de barras recebem um código <strong>EAN-13 interno único</strong> automaticamente.</li>
+                            </ul>
+                        </div>
+                        <div class="mt-2 mt-md-0">
+                            <a href="/modelo_planilha_produtos" class="btn btn-sm btn-dark">
+                                <i class="fas fa-download mr-1"></i> Baixar Planilha Modelo (.xlsx)
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="form-importar-planilha" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label class="font-weight-bold">Selecione o arquivo (.xlsx ou .csv) *</label>
+                        <input type="file" class="form-control-file border p-2 rounded bg-light" id="arquivo-planilha" name="arquivo" accept=".xlsx,.csv" required>
+                    </div>
+
+                    <div id="resultado-importacao" class="mt-3" style="display: none;"></div>
+
+                    <button type="submit" class="btn btn-brand w-100 mt-3" id="btn-submit-importacao">
+                        <i class="fas fa-cloud-upload-alt mr-1"></i> Processar e Importar Planilha
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==========================================================================
+     MODAL 5: HISTÓRICO IMUTÁVEL DE MOVIMENTAÇÕES
+     ========================================================================== -->
 <div class="modal fade" id="modal-historico" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-history"></i> Histórico de Movimentações</h5>
+                <h5 class="modal-title">
+                    <i class="fas fa-shield-alt mr-2"></i> Histórico Auditável de Movimentações (Log Imutável)
+                </h5>
                 <button type="button" class="close" data-dismiss="modal">
                     <span>&times;</span>
                 </button>
             </div>
             <div class="modal-body">
                 <div class="table-responsive">
-                    <table id="tabela-historico" class="table table-striped table-bordered" style="width:100%">
-                        </table>
+                    <table id="tabela-historico" class="table table-striped table-bordered" style="width:100%"></table>
                 </div>
             </div>
         </div>
@@ -299,10 +566,10 @@
 <!-- MODAL ADICIONAR PREÇO/FORNECEDOR -->
 <div class="modal fade" id="modal-adicionar-preco" style="z-index: 1060;">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-primary">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="fas fa-dollar-sign"></i> Adicionar Histórico de Compra</h5>
-                <button type="button" class="close text-white" data-dismiss="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-dollar-sign mr-2"></i> Adicionar Histórico de Compra</h5>
+                <button type="button" class="close" data-dismiss="modal">
                     <span>&times;</span>
                 </button>
             </div>
@@ -327,8 +594,8 @@
                         </div>
                     </div>
                     
-                    <button type="submit" class="btn btn-success w-100 mt-4">
-                        <i class="fas fa-save"></i> Salvar Preço
+                    <button type="submit" class="btn btn-brand w-100 mt-4">
+                        <i class="fas fa-save mr-1"></i> Salvar Preço
                     </button>
                 </form>
             </div>
@@ -336,37 +603,35 @@
     </div>
 </div>
 
-<!-- MODAL 1: LISTA GERAL DE FORNECEDORES -->
+<!-- MODAL LISTA GERAL DE FORNECEDORES -->
 <div class="modal fade" id="modal-gerenciar-fornecedores" style="z-index: 1050;">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
-            <div class="modal-header bg-secondary text-white">
-                <h5 class="modal-title"><i class="fas fa-truck"></i> Gerenciar Fornecedores</h5>
-                <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-truck mr-2"></i> Gerenciar Fornecedores</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="mb-3 text-right">
-                    <button class="btn btn-success" id="botao-add-fornecedor-crud">
-                        <i class="fas fa-plus"></i> Novo Fornecedor
+                    <button class="btn btn-brand" id="botao-add-fornecedor-crud">
+                        <i class="fas fa-plus mr-1"></i> Novo Fornecedor
                     </button>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-striped table-bordered text-center w-100" id="tabela-crud-fornecedores">
-                        <!-- Povoado via JS -->
-                    </table>
+                    <table class="table table-striped table-bordered text-center w-100" id="tabela-crud-fornecedores"></table>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- MODAL 2: FORMULÁRIO DE CADASTRO / EDIÇÃO -->
+<!-- MODAL FORMULÁRIO DE CADASTRO / EDIÇÃO DE FORNECEDOR -->
 <div class="modal fade" id="modal-form-fornecedor" style="z-index: 1060;">
     <div class="modal-dialog">
-        <div class="modal-content border-success">
-            <div class="modal-header bg-success text-white">
+        <div class="modal-content">
+            <div class="modal-header">
                 <h5 class="modal-title" id="titulo-modal-fornecedor">Fornecedor</h5>
-                <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
             <div class="modal-body">
                 <form id="form-crud-fornecedor">
@@ -395,10 +660,128 @@
                         <input type="text" class="form-control" id="crud-fornecedor-pix">
                     </div>
                     
-                    <button type="submit" class="btn btn-success w-100 mt-3">
-                        <i class="fas fa-save"></i> Salvar
+                    <button type="submit" class="btn btn-brand w-100 mt-3">
+                        <i class="fas fa-save mr-1"></i> Salvar
                     </button>
                 </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==========================================================================
+     MODAL 6: GERADOR DE LISTA DE COMPRAS EM PDF (POR STATUS OU FORNECEDOR)
+     ========================================================================== -->
+<div class="modal fade" id="modal-lista-compras" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-file-pdf mr-2" style="color: #D90429;"></i> Gerar Lista de Compras em PDF
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Barra de Filtros da Lista de Compras -->
+                <div class="p-3 rounded bg-light border mb-3">
+                    <div class="form-row align-items-end">
+                        <div class="col-12 col-md-4 form-group mb-2 mb-md-0">
+                            <label class="small font-weight-bold text-dark mb-1">
+                                <i class="fas fa-traffic-light text-danger mr-1"></i> Filtrar por Status do Estoque:
+                            </label>
+                            <select class="form-control form-control-sm font-weight-bold" id="pdf-filtro-status">
+                                <option value="critico_atencao" selected>🔴 Críticos + 🟡 Em Atenção (Recomendado)</option>
+                                <option value="critico">🔴 Apenas Críticos (Abaixo do Mínimo)</option>
+                                <option value="atencao">🟡 Apenas Em Atenção (Faixa de Segurança)</option>
+                                <option value="ok">🟢 Apenas Normal / OK</option>
+                                <option value="todos">📦 Todos os Produtos do Catálogo</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12 col-md-4 form-group mb-2 mb-md-0">
+                            <label class="small font-weight-bold text-dark mb-1">
+                                <i class="fas fa-truck text-danger mr-1"></i> Filtrar por Fornecedor Específico:
+                            </label>
+                            <select class="form-control form-control-sm font-weight-bold" id="pdf-filtro-fornecedor">
+                                <option value="todos" selected>Todos os Fornecedores (Menor Preço)</option>
+                                <option value="sem_fornecedor">Itens Sem Fornecedor Cadastrado</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12 col-md-4 form-group mb-0">
+                            <label class="small font-weight-bold text-dark mb-1">
+                                <i class="fas fa-Sliders-h text-dark mr-1"></i> Critério do Fornecedor Selecionado:
+                            </label>
+                            <select class="form-control form-control-sm" id="pdf-modo-fornecedor" disabled>
+                                <option value="menor_preco" selected>Apenas onde é o Fornecedor de Menor Preço</option>
+                                <option value="todos_vinculados">Todos os itens cotados neste Fornecedor</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resumo Dinâmico da Lista Selecionada -->
+                <div class="d-flex justify-content-between align-items-center flex-wrap mb-2 px-1">
+                    <div class="small text-secondary">
+                        <i class="fas fa-check-square text-danger mr-1"></i>
+                        Marque/desmarque os itens desejados e ajuste a <strong>Qtd. a Comprar</strong> antes de emitir o PDF.
+                    </div>
+                    <div class="mt-1 mt-md-0">
+                        <span class="badge badge-dark p-2 mr-1" style="font-size: 0.85rem;">
+                            Itens selecionados: <strong id="pdf-resumo-qtd-itens">0</strong>
+                        </span>
+                        <span class="badge badge-danger p-2" style="font-size: 0.85rem; background-color: #D90429;">
+                            Total Estimado: <strong id="pdf-resumo-valor-total">R$ 0,00</strong>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Tabela Interativa de Seleção de Itens para Compra -->
+                <div class="table-responsive border rounded" style="max-height: 380px; overflow-y: auto;">
+                    <table class="table table-sm table-hover text-center mb-0" id="tabela-preview-lista-compras">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th style="width: 42px;" class="align-middle">
+                                    <input type="checkbox" id="pdf-check-todos" checked title="Selecionar/Desmarcar Todos">
+                                </th>
+                                <th class="text-left align-middle">Produto</th>
+                                <th class="align-middle">Código</th>
+                                <th class="align-middle">Status</th>
+                                <th class="align-middle">Saldo / Mín.</th>
+                                <th class="align-middle">Fornecedor</th>
+                                <th class="align-middle" style="width: 115px;">Qtd. Comprar</th>
+                                <th class="align-middle">Preço Unit.</th>
+                                <th class="align-middle">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-lista-compras">
+                            <tr>
+                                <td colspan="9" class="text-muted py-4">Carregando itens...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="form-group mt-3 mb-0">
+                    <label class="small font-weight-bold text-dark mb-1">Observações do Pedido / Condições de Compra (Impressas no PDF):</label>
+                    <input type="text" class="form-control form-control-sm" id="pdf-observacoes"
+                           placeholder="Ex: Solicitar entrega urgente para itens críticos; validar prazo de pagamento.">
+                </div>
+            </div>
+
+            <div class="modal-footer bg-light d-flex justify-content-between">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                <div class="d-flex" style="gap: 8px;">
+                    <button type="button" class="btn btn-dark" id="btn-imprimir-lista-compras">
+                        <i class="fas fa-print mr-1"></i> Imprimir / Visualizar
+                    </button>
+                    <button type="button" class="btn btn-brand" id="btn-baixar-pdf-compras">
+                        <i class="fas fa-file-pdf mr-1"></i> Baixar Lista de Compras (.PDF)
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -411,24 +794,23 @@
 
 {% if current_user.privileges == 1 %}
 <script>
-/* ==========================================
-   LÓGICA EXCLUSIVA DO OPERADOR
-   ========================================== */
+/* ==========================================================================
+   LÓGICA EXCLUSIVA DO OPERADOR (Com Validação de Código e Alerta de Estoque)
+   ========================================================================== */
 $(document).ready(function() {
     var input = $('#operador-barcode');
     var statusDiv = $('#operador-status');
+    var alertaDiv = $('#operador-alerta-estoque');
 
-    // 1. O Pulo do Gato: Força o foco de volta para o campo de texto caso o operador clique fora da tela sem querer.
     $(document).on('click', function() {
         input.focus();
     });
 
-    // 2. Escuta a "teclada" final do leitor de código de barras (Enter)
     input.on('keypress', function(e) {
         if (e.which === 13) { 
             e.preventDefault();
             var codigoBruto = input.val().trim();
-            input.val(''); // Limpa o campo instantaneamente para o próximo bip
+            input.val('');
             
             if (codigoBruto) {
                 processarBaixaAutomatica(codigoBruto);
@@ -437,52 +819,52 @@ $(document).ready(function() {
     });
 
     function processarBaixaAutomatica(codigo) {
-        statusDiv.show().removeClass().addClass('mt-4 p-3 rounded bg-warning text-dark')
-                 .html('<i class="fas fa-spinner fa-spin"></i> Consultando código...');
+        alertaDiv.hide();
+        statusDiv.show().removeClass().addClass('mt-4 p-3 rounded bg-secondary text-white')
+                 .html('<i class="fas fa-spinner fa-spin mr-1"></i> Validando código de barras...');
 
-        // Reaproveita a sua lógica de fatiamento de códigos longos
-        let codigo_produto = codigo;
-        if (codigo.length === 36) {
-            codigo_produto = codigo.substring(16, 28).replace(/^0+/, '');
-        }
-
-        // Requisição 1: Busca o ID e o Nome do Produto pelo código
         $.ajax({
             url: '/produto_por_codigo',
             type: 'GET',
-            data: { codigo: codigo_produto },
+            data: { codigo: codigo },
             success: function(response){
                 if(response.success){
                     var idCorreto = response.id_produto || response.id;
+                    var nomeSeguro = escapeHtml(response.nome);
                     
-                    // Requisição 2: Executa a baixa de 1 unidade
                     $.ajax({
                         url: '/registrar_movimentacao',
                         type: 'POST',
                         data: {
                             id_produto: idCorreto,
-                            quantidade: 1, // Baixa de 1 unidade por Bip
-                            operacao: 1 // 1 = SAÍDA
+                            quantidade: 1,
+                            operacao: 1,
+                            observacao: 'Baixa rápida via leitor (Operador)'
                         },
                         success: function(baixaResp) {
                             if(baixaResp.success) {
-                                statusDiv.removeClass().addClass('mt-4 p-3 rounded bg-success text-white')
-                                         .html('<i class="fas fa-check-circle fa-lg"></i> <b>Sucesso!</b> Baixa de 1x ' + response.nome);
+                                statusDiv.removeClass().addClass('mt-4 p-3 rounded bg-dark text-white')
+                                         .html('<i class="fas fa-check-circle text-success mr-1"></i> <b>Baixa registrada!</b> 1x ' + nomeSeguro + ' <small>(Saldo restante: ' + baixaResp.saldo_atual + ')</small>');
+
+                                if (baixaResp.alerta_estoque) {
+                                    var corAlerta = baixaResp.alerta_estoque.nivel === 'critico' ? 'bg-danger text-white' : 'bg-warning text-dark';
+                                    alertaDiv.removeClass().addClass('mt-3 p-2 rounded font-weight-bold ' + corAlerta)
+                                             .text(baixaResp.alerta_estoque.mensagem).show();
+                                }
                             } else {
-                                // Ex: Se o estoque estiver zerado e a sua trava de segurança bloquear
                                 statusDiv.removeClass().addClass('mt-4 p-3 rounded bg-danger text-white')
-                                         .html('<i class="fas fa-exclamation-triangle fa-lg"></i> <b>Bloqueado:</b> ' + baixaResp.error);
+                                         .html('<i class="fas fa-exclamation-triangle mr-1"></i> <b>Bloqueado:</b> ' + escapeHtml(baixaResp.error));
                             }
                         }
                     });
                 } else {
                     statusDiv.removeClass().addClass('mt-4 p-3 rounded bg-danger text-white')
-                             .html('<i class="fas fa-times-circle fa-lg"></i> Produto não encontrado no sistema.');
+                             .html('<i class="fas fa-times-circle mr-1"></i> ' + escapeHtml(response.error || 'Produto não encontrado no sistema.'));
                 }
             },
             error: function() {
                 statusDiv.removeClass().addClass('mt-4 p-3 rounded bg-dark text-white')
-                         .html('<i class="fas fa-wifi"></i> Erro de comunicação com o servidor.');
+                         .html('<i class="fas fa-wifi mr-1"></i> Erro de comunicação com o servidor.');
             }
         });
     }
@@ -490,34 +872,172 @@ $(document).ready(function() {
 </script>
 {% else %}
 
+<!-- Bibliotecas jsPDF e AutoTable para geração nativa de Lista de Compras em PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
 <script>
-/* ==========================================
-   LÓGICA ORIGINAL DO ADMINISTRADOR
-========================================== */
+/* ==========================================================================
+   LÓGICA GERENCIAL DO ADMINISTRADOR / PCP
+   ========================================================================== */
 
-// Tabela
+var filtroStatusAtual = 'todos';
+var filtroFornecedorAtual = 'todos';
+var cacheFornecedoresAtivos = [];
+
+// Carrega os fornecedores ativos para os seletores de filtro da tabela, modal de adição e modal de PDF
+function carregarFiltroFornecedores() {
+    $.get('/fornecedores', function(res) {
+        var lista = (res && res.fornecedores) ? res.fornecedores : [];
+        cacheFornecedoresAtivos = lista;
+
+        var valorAtualTabela = $('#filtro-fornecedor-tabela').val() || 'todos';
+        var selectTabela = $('#filtro-fornecedor-tabela');
+        selectTabela.empty()
+            .append('<option value="todos">Todos os Fornecedores</option>')
+            .append('<option value="sem_fornecedor">Sem Fornecedor Cadastrado</option>');
+
+        var selectAdd = $('#produto-fornecedor');
+        selectAdd.empty().append('<option value="">Nenhum fornecedor selecionado...</option>');
+
+        var valorAtualPdf = $('#pdf-filtro-fornecedor').val() || 'todos';
+        var selectPdf = $('#pdf-filtro-fornecedor');
+        selectPdf.empty()
+            .append('<option value="todos">Todos os Fornecedores (Menor Preço)</option>')
+            .append('<option value="sem_fornecedor">Itens Sem Fornecedor Cadastrado</option>');
+
+        lista.forEach(function(f) {
+            selectTabela.append(new Option(f.nome, String(f.id)));
+            selectAdd.append(new Option(f.nome, String(f.id)));
+            selectPdf.append(new Option(f.nome, String(f.id)));
+        });
+
+        if (selectTabela.find('option[value="' + valorAtualTabela + '"]').length > 0) {
+            selectTabela.val(valorAtualTabela);
+        }
+        if (selectPdf.find('option[value="' + valorAtualPdf + '"]').length > 0) {
+            selectPdf.val(valorAtualPdf);
+        }
+    });
+}
+
+carregarFiltroFornecedores();
+
+// Filtro customizado do DataTables combinando Status de Criticidade + Fornecedor (Menor Preço)
+$.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+    if (settings.nTable.id !== 'tabela-produtos') return true;
+
+    var rowData = table.row(dataIndex).data();
+    if (!rowData) return true;
+
+    // 1. Filtro por Status de Estoque
+    if (filtroStatusAtual !== 'todos') {
+        var saldo = parseFloat(rowData.saldo) || 0;
+        var minimo = parseFloat(rowData.estoque_minimo) || 0;
+
+        if (filtroStatusAtual === 'critico' && !(minimo > 0 && saldo < minimo)) {
+            return false;
+        }
+        if (filtroStatusAtual === 'atencao' && !(minimo > 0 && saldo >= minimo && saldo <= minimo * 1.5)) {
+            return false;
+        }
+        if (filtroStatusAtual === 'ok' && !(minimo === 0 || saldo > minimo * 1.5)) {
+            return false;
+        }
+    }
+
+    // 2. Filtro por Fornecedor (Menor Preço)
+    if (filtroFornecedorAtual !== 'todos') {
+        var idFornMenor = rowData.id_fornecedor_menor_preco ? String(rowData.id_fornecedor_menor_preco) : '';
+        if (filtroFornecedorAtual === 'sem_fornecedor') {
+            if (idFornMenor !== '') return false;
+        } else {
+            if (idFornMenor !== String(filtroFornecedorAtual)) return false;
+        }
+    }
+
+    return true;
+});
+
+function formatarMoedaBR(valor) {
+    var num = parseFloat(valor) || 0;
+    return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+/* 1. CARREGAR DASHBOARD RESUMIDO */
+function atualizarDashboard() {
+    $.get('/api/dashboard_estoque', function(res) {
+        if (!res || !res.success) return;
+
+        var k = res.kpis;
+        $('#kpi-total-produtos').text(k.total_produtos);
+        $('#kpi-total-unidades').text(k.total_unidades.toLocaleString('pt-BR'));
+        $('#kpi-qtd-criticos').text(k.qtd_criticos);
+        $('#kpi-qtd-atencao').text(k.qtd_atencao);
+        $('#kpi-valor-estoque').text(formatarMoedaBR(k.valor_total_estoque));
+        $('#kpi-custo-reposicao').text(formatarMoedaBR(k.custo_reposicao_criticos));
+        $('#kpi-movs-hoje').text(k.movimentacoes_hoje);
+        $('#badge-count-criticos').text(k.qtd_criticos);
+
+        // Tabela de Alertas de Falta
+        var tbodyCrit = $('#tbody-dashboard-criticos');
+        tbodyCrit.empty();
+        if (res.itens_criticos && res.itens_criticos.length > 0) {
+            res.itens_criticos.forEach(function(item) {
+                tbodyCrit.append(`
+                    <tr>
+                        <td class="text-left pl-3 font-weight-bold">${escapeHtml(item.nome)}</td>
+                        <td><code>${escapeHtml(item.codigo)}</code></td>
+                        <td class="text-danger font-weight-bold">${item.saldo}</td>
+                        <td>${item.estoque_minimo}</td>
+                        <td><span class="badge badge-danger">-${item.deficit} un.</span></td>
+                    </tr>
+                `);
+            });
+        } else {
+            tbodyCrit.append('<tr><td colspan="5" class="text-muted py-3"><i class="fas fa-check-circle text-success mr-1"></i> Nenhum item abaixo do estoque mínimo!</td></tr>');
+        }
+
+        // Tabela de Itens Mais Movimentados
+        var tbodyMov = $('#tbody-dashboard-movimentados');
+        tbodyMov.empty();
+        if (res.itens_mais_movimentados && res.itens_mais_movimentados.length > 0) {
+            res.itens_mais_movimentados.forEach(function(m) {
+                tbodyMov.append(`
+                    <tr>
+                        <td class="text-left pl-3 font-weight-bold">${escapeHtml(m.nome)}</td>
+                        <td>${m.total_operacoes}x</td>
+                        <td class="text-success">+${parseFloat(m.total_entradas)}</td>
+                        <td class="text-danger">-${parseFloat(m.total_saidas)}</td>
+                        <td><strong>${parseFloat(m.volume_total)} un.</strong></td>
+                    </tr>
+                `);
+            });
+        } else {
+            tbodyMov.append('<tr><td colspan="5" class="text-muted py-3">Ainda não há movimentações registradas.</td></tr>');
+        }
+    });
+}
+
+/* 2. TABELA PRINCIPAL DE PRODUTOS */
 var table = $('#tabela-produtos').DataTable({
-
     ajax: {
         url: '/produtos',
         dataSrc: function (json) {
+            atualizarDashboard();
             var listaDeProdutos = json.produtos ? json.produtos : json;
             
-            // 1. Filtra os ativos
             var produtosFiltrados = listaDeProdutos.filter(function(produto) {
                 return produto.ativo === true || produto.ativo === 1 || produto.ativo === "t"; 
             });
 
-            // 2. Calcula a proporção para a nossa ordenação mágica
             produtosFiltrados.forEach(function(produto) {
                 var saldo = parseFloat(produto.saldo) || 0;
                 var estoqueMinimo = parseFloat(produto.estoque_minimo) || 0;
 
-                // Prevenção contra divisão por zero (se não tem estoque mínimo, jogamos para o final da fila/verde)
                 if (estoqueMinimo === 0) {
                     produto.indice_ordenacao = 999999; 
                 } else {
-                    // Aqui nascem os seus 90% (0.90) ou 99% (0.99)
                     produto.indice_ordenacao = saldo / estoqueMinimo; 
                 }
             });
@@ -533,67 +1053,134 @@ var table = $('#tabela-produtos').DataTable({
         url: "/static/js/pt-BR.json"
     },
 
-    // 3. Força a tabela a nascer ordenada pela coluna de índice 3 (que é a nossa invisível), ordem crescente (asc)
-    order: [[5, 'asc']], 
+    order: [[8, 'asc']], 
 
-columns: [
-        { data: "nome", title: "Nome" },           // Índice 0
-        { data: "codigo", title: "Código" },       // Índice 1
-        { data: "localizacao", title: "Localização" },
+    columns: [
+        { 
+            data: "nome", 
+            title: "Descrição do Produto",
+            className: "text-left font-weight-bold",
+            render: function(data) { return escapeHtml(data); }
+        },
+        { 
+            data: "codigo", 
+            title: "Código de Barras",
+            render: function(data) { return '<code>' + escapeHtml(data || '-') + '</code>'; }
+        },
+        { 
+            data: "localizacao", 
+            title: "Localização",
+            render: function(data) { return escapeHtml(data || '-'); }
+        },
+        {
+            data: "fornecedor_menor_preco",
+            title: "Fornecedor (Menor Preço)",
+            render: function(data, type, row) {
+                if (type === 'filter' || type === 'sort') {
+                    return data ? String(data) : 'Sem fornecedor';
+                }
+                if (!data) {
+                    return '<span class="text-muted small font-italic">Não vinculado</span>';
+                }
+                var html = '<span class="font-weight-bold text-dark"><i class="fas fa-truck text-danger mr-1"></i>' + escapeHtml(data) + '</span>';
+                var qtdExtra = (parseInt(row.qtd_fornecedores, 10) || 0) - 1;
+                if (qtdExtra > 0) {
+                    html += ' <span class="badge badge-secondary ml-1" title="Mais ' + qtdExtra + ' fornecedor(es) cotado(s) para este item">+' + qtdExtra + '</span>';
+                }
+                return html;
+            }
+        },
+        {
+            data: "menor_preco",
+            title: "Menor Preço (R$)",
+            render: function(data, type) {
+                var valor = parseFloat(data);
+                if (type === 'sort' || type === 'type') {
+                    return (!isNaN(valor) && valor > 0) ? valor : 999999999;
+                }
+                if (!isNaN(valor) && valor > 0) {
+                    return '<strong class="text-dark">' + formatarMoedaBR(valor) + '</strong>';
+                }
+                return '<span class="text-muted">-</span>';
+            }
+        },
         { 
             data: "saldo", 
-            title: "Saldo",
-            // O render formata o visual apenas na hora de desenhar na tela (display)
-            render: function (data, type, row) {
-                if (data !== null) {
+            title: "Saldo Atual",
+            render: function (data) {
+                if (data !== null && data !== undefined) {
                     var numero = parseFloat(data);
-                    return isNaN(numero) ? data : numero; 
+                    return isNaN(numero) ? escapeHtml(data) : '<strong>' + numero + '</strong>'; 
                 }
-                return data;
+                return '0';
             }
         },
         { 
             data: "estoque_minimo", 
-            title: `Estoque Mínimo
-                    <i class="fas fa-question-circle text-info" 
-                       style="cursor: help;" 
-                       title="Regras de Cores:&#10;🔴 Crítico: Saldo menor que o Mínimo.&#10;🟡 Atenção: Saldo entre o Mínimo e +50% de margem.&#10;🟢 OK: Saldo acima da margem de 50%.">
-                    </i>`,
-            // Aplicamos a mesma regra para o estoque mínimo
-            render: function (data, type, row) {
-                if (data !== null) {
+            title: "Estoque Mínimo",
+            render: function (data) {
+                if (data !== null && data !== undefined) {
                     var numero = parseFloat(data);
-                    return isNaN(numero) ? data : numero; 
+                    return isNaN(numero) ? escapeHtml(data) : numero; 
                 }
-                return data;
+                return '0';
             }
         },
-        // 4. A COLUNA INVISÍVEL
-        { data: "indice_ordenacao", visible: false } // Índice 3
+        {
+            data: null,
+            title: "Status",
+            orderable: false,
+            render: function(data, type, row) {
+                var saldo = parseFloat(row.saldo) || 0;
+                var minimo = parseFloat(row.estoque_minimo) || 0;
+                if (minimo > 0 && saldo < minimo) {
+                    return '<span class="badge-estoque-critico"><i class="fas fa-exclamation-circle mr-1"></i>Crítico</span>';
+                } else if (minimo > 0 && saldo <= minimo * 1.5) {
+                    return '<span class="badge-estoque-atencao"><i class="fas fa-exclamation-triangle mr-1"></i>Atenção</span>';
+                }
+                return '<span class="badge-estoque-ok"><i class="fas fa-check mr-1"></i>Normal</span>';
+            }
+        },
+        { data: "indice_ordenacao", visible: false }
     ],
 
-    // 5. A pintura das linhas (continua igual)
-    rowCallback: function(row, data, displayNum, displayIndex, dataIndex) {
+    rowCallback: function(row, data) {
         var saldo = parseFloat(data.saldo) || 0;
         var estoqueMinimo = parseFloat(data.estoque_minimo) || 0;
         var margemCinquentaPorcento = estoqueMinimo * 1.5;
 
-        // Resetar a cor antes de aplicar a nova (importante para atualizações)
-        $(row).css('background-color', '');
+        $(row).removeClass('row-estoque-critico row-estoque-atencao row-estoque-ok');
 
-        if (saldo < estoqueMinimo) {
-            $(row).css('background-color', '#ffdddd'); // Vermelho (Crítico)
-        } 
-        else if (saldo <= margemCinquentaPorcento) {
-            $(row).css('background-color', '#fff3cd'); // Amarelo (Atenção)
-        } 
-        else {
-            $(row).css('background-color', '#d4edda'); // Verde (OK)
+        if (estoqueMinimo > 0 && saldo < estoqueMinimo) {
+            $(row).addClass('row-estoque-critico');
+        } else if (estoqueMinimo > 0 && saldo <= margemCinquentaPorcento) {
+            $(row).addClass('row-estoque-atencao');
+        } else {
+            $(row).addClass('row-estoque-ok');
         }
     }
 });
 
-// O código de clique na linha continua igual
+// Botões de filtro rápido de status
+$('.filtro-status-btn').on('click', function() {
+    $('.filtro-status-btn').removeClass('btn-dark active').addClass('btn-secondary');
+    $(this).removeClass('btn-secondary').addClass('btn-dark active');
+    filtroStatusAtual = $(this).data('status');
+    table.draw();
+});
+
+// Seletor de filtro por fornecedor (Menor Preço) na barra superior da tabela
+$('#filtro-fornecedor-tabela').on('change', function() {
+    filtroFornecedorAtual = $(this).val() || 'todos';
+    table.draw();
+});
+
+$('#card-kpi-criticos').on('click', function() {
+    $('.filtro-status-btn[data-status="critico"]').trigger('click');
+    $('#painel-detalhes-dashboard').collapse('show');
+});
+
+// Seleção de linha na tabela
 $('#tabela-produtos').on('click', 'tbody tr', function () {
     var row = table.row(this);
     if (!row.data()) return;
@@ -602,71 +1189,65 @@ $('#tabela-produtos').on('click', 'tbody tr', function () {
     $(this).addClass('tableSelected');
 });
 
-// Evento para desmarcar ao clicar fora da tabela
 $(document).on('click', function (e) {
-    // Verifica se o elemento clicado NÃO faz parte da #tabela-produtos
-    if ($(e.target).closest('#tabela-produtos').length === 0) {
-        // Se foi fora da tabela, remove a classe da linha selecionada
+    if ($(e.target).closest('#tabela-produtos, .modal, .btn').length === 0) {
         $('#tabela-produtos tbody tr.tableSelected').removeClass('tableSelected');
     }
 });
 
-/* ABRIR MODAL ADICIONAR */
+/* GERADOR DE CÓDIGO EAN-13 INTERNO */
+$('#btn-gerar-codigo-add').click(function() {
+    $.get('/gerar_codigo_barras', function(res) {
+        if (res.success) {
+            $('#produto-codigo').val(res.codigo);
+        }
+    });
+});
+
+$('#btn-gerar-codigo-edit').click(function() {
+    $.get('/gerar_codigo_barras', function(res) {
+        if (res.success) {
+            $('#editar-codigo').val(res.codigo);
+        }
+    });
+});
+
+/* ABRIR MODAL ADICIONAR PRODUTO */
 $('#botao-adicionar-produto').click(function(){
-
+    $('#form-adicionar-produto')[0].reset();
+    carregarFiltroFornecedores();
     $('#modal-adicionar-produto').modal('show');
-
 });
 
 /* ADICIONAR PRODUTO */
 $('#form-adicionar-produto').submit(function(e){
-
     e.preventDefault();
 
     $.post('/produtos', {
-
         nome: $('#produto-nome').val(),
         codigo: $('#produto-codigo').val(),
-        
-        // campos adicionados
         saldo: $('#produto-saldo').val(),
         estoque_minimo: $('#produto-estoque-minimo').val(),
-        localizacao: $('#produto-localizacao').val()
-
+        localizacao: $('#produto-localizacao').val(),
+        id_fornecedor: $('#produto-fornecedor').val(),
+        preco: $('#produto-preco').val()
     }, function(response){
-
         if(response.success){
-
             $('#modal-adicionar-produto').modal('hide');
-            table.ajax.reload(null,false);
-
-            // Limpa todos os 4 campos para o próximo cadastro
-            $('#produto-nome').val('');
-            $('#produto-codigo').val('');
-            $('#produto-saldo').val('');
-            $('#produto-estoque-minimo').val('');
-            $('#produto-localizacao').val('');
+            table.ajax.reload(null, false);
+            $('#form-adicionar-produto')[0].reset();
 
             Swal.fire({
                 icon: 'success',
-                title: 'Operação concluída',
-                text: 'Produto cadastrado com sucesso.',
-                timer: 1500,
+                title: 'Produto cadastrado!',
+                text: 'Código registrado: ' + response.codigo,
+                timer: 1800,
                 showConfirmButton: false
             });
-
         } else {
-
-            Swal.fire({
-                icon: 'error',
-                title: 'Erro',
-                text: response.error
-            });
-
+            Swal.fire('Erro', response.error, 'error');
         }
-
     });
-
 });
 
 /* EDITAR PRODUTO */
@@ -674,7 +1255,7 @@ $('#botao-editar-produto').click(function(){
     var selectedRow = table.row('.tableSelected');
 
     if(!selectedRow.data()){
-        Swal.fire({ icon: 'error', title: 'Erro', text: 'Selecione um produto.' });
+        Swal.fire({ icon: 'warning', title: 'Atenção', text: 'Selecione um produto na tabela primeiro.' });
         return;
     }
 
@@ -684,15 +1265,12 @@ $('#botao-editar-produto').click(function(){
     $('#editar-codigo').val(data.codigo);
     $('#editar-saldo').val(parseFloat(data.saldo) || 0);
     $('#editar-estoque-minimo').val(parseFloat(data.estoque_minimo) || 0);
-    $('#editar-localizacao').val(data.localizacao);
+    $('#editar-localizacao').val(data.localizacao || '');
 
-    // 🔥 Chama a função limpa (sem o botão verde)
     carregarTabelaPrecos(data.id);
-
     $('#editar-modal').modal('show');
 });
 
-// 1. GERAÇÃO DA TABELA (Sem a 4ª coluna)
 function carregarTabelaPrecos(id_produto) {
     let tbody = $('#tabela-fornecedores-editar tbody');
     tbody.html('<tr><td colspan="3" class="text-center py-3"><i class="fas fa-spinner fa-spin"></i> Buscando histórico...</td></tr>');
@@ -701,21 +1279,23 @@ function carregarTabelaPrecos(id_produto) {
         tbody.empty(); 
         if(response.success && response.fornecedores.length > 0) {
             response.fornecedores.forEach(function(f) {
+                let fornId = parseInt(f.id_fornecedor, 10) || 0;
+                let precoVal = parseFloat(f.preco) || 0;
                 let tr = `
                     <tr>
-                        <td class="align-middle text-left font-weight-bold">${f.fornecedor_nome}</td>
+                        <td class="align-middle text-left font-weight-bold">${escapeHtml(f.fornecedor_nome)}</td>
                         <td class="align-middle">
                             <div class="input-group input-group-sm">
                                 <div class="input-group-prepend">
                                     <span class="input-group-text font-weight-bold">R$</span>
                                 </div>
                                 <input type="number" class="form-control input-preco text-right" 
-                                       data-fornecedor="${f.id_fornecedor}" 
-                                       data-original="${f.preco}" 
-                                       value="${f.preco}" step="0.01" min="0">
+                                       data-fornecedor="${fornId}" 
+                                       data-original="${precoVal}" 
+                                       value="${precoVal}" step="0.01" min="0">
                             </div>
                         </td>
-                        <td class="align-middle cell-data">${f.data_modificacao}</td>
+                        <td class="align-middle cell-data">${escapeHtml(f.data_modificacao)}</td>
                     </tr>
                 `;
                 tbody.append(tr);
@@ -724,7 +1304,7 @@ function carregarTabelaPrecos(id_produto) {
             tbody.append(`
                 <tr>
                     <td colspan="3" class="text-muted font-italic text-center py-4">
-                        <i class="fas fa-info-circle"></i> Sem histórico de Compra para este item.
+                        <i class="fas fa-info-circle"></i> Sem histórico de compra para este item.
                     </td>
                 </tr>
             `);
@@ -732,7 +1312,6 @@ function carregarTabelaPrecos(id_produto) {
     });
 }
 
-// 2. ABRIR MODAL DE ADICIONAR NOVO FORNECEDOR
 $(document).on('click', '#botao-novo-preco', function(e) {
     e.preventDefault(); 
     let id_produto = $('#editar-id').val();
@@ -751,7 +1330,6 @@ $(document).on('click', '#botao-novo-preco', function(e) {
     $('#modal-adicionar-preco').modal('show');
 });
 
-// 3. SALVAR O NOVO PREÇO VIA MODAL (Função que estava faltando)
 $(document).on('submit', '#form-adicionar-preco', function(e) {
     e.preventDefault();
     
@@ -766,16 +1344,16 @@ $(document).on('submit', '#form-adicionar-preco', function(e) {
     }, function(response) {
         if(response.success) {
             $('#modal-adicionar-preco').modal('hide');
-            Swal.fire({ icon: 'success', title: 'Adicionado com sucesso!', timer: 1500, showConfirmButton: false });
-            // Atualiza a tabela por baixo imediatamente
+            Swal.fire({ icon: 'success', title: 'Preço vinculado!', timer: 1500, showConfirmButton: false });
             carregarTabelaPrecos(id_produto);
+            table.ajax.reload(null, false);
         } else {
             Swal.fire('Erro', response.error, 'error');
         }
     });
 });
 
-// 4. ATUALIZAÇÃO DO FORMULÁRIO PRINCIPAL PARA ENVIAR O LOTE DE PREÇOS
+// Submissão única e consolidada do formulário de edição (incluindo localização e preços)
 $('#editar-formulario').submit(function(e){
     e.preventDefault();
 
@@ -800,7 +1378,7 @@ $('#editar-formulario').submit(function(e){
             id: $('#editar-id').val(),
             nome: $('#editar-nome').val(),
             codigo: $('#editar-codigo').val(),
-            localizacao: $('#editar-localizacao').val(), // <-- Adicione esta linha!
+            localizacao: $('#editar-localizacao').val(),
             saldo: $('#editar-saldo').val(),
             estoque_minimo: $('#editar-estoque-minimo').val(),
             precos_fornecedores: JSON.stringify(precosAlterados) 
@@ -808,8 +1386,8 @@ $('#editar-formulario').submit(function(e){
         success: function(response){
             if(response.success){
                 $('#editar-modal').modal('hide');
-                table.ajax.reload(null,false);
-                Swal.fire({ icon: 'success', title: 'Atualizado com sucesso.', timer: 1500, showConfirmButton: false });
+                table.ajax.reload(null, false);
+                Swal.fire({ icon: 'success', title: 'Atualizado com sucesso!', timer: 1500, showConfirmButton: false });
             } else {
                 Swal.fire('Erro', response.error, 'error');
             }
@@ -819,7 +1397,6 @@ $('#editar-formulario').submit(function(e){
 
 /* INATIVAR PRODUTO (Soft Delete) */
 $('#botao-apagar-produto').click(function(){
-
     var selectedRow = table.row('.tableSelected');
 
     if(!selectedRow.data()){
@@ -830,19 +1407,19 @@ $('#botao-apagar-produto').click(function(){
     var data = selectedRow.data();
 
     Swal.fire({
-        title: 'Tem certeza?',
-        text: "O produto '" + data.nome + "' será inativado. Seu histórico no estoque será mantido intacto.",
+        title: 'Inativar Produto?',
+        text: "O produto '" + data.nome + "' será inativado e o histórico de movimentações permanecerá preservado.",
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Sim, inativar!'
+        confirmButtonColor: '#D90429',
+        cancelButtonColor: '#1F242D',
+        confirmButtonText: 'Sim, inativar!',
+        cancelButtonText: 'Cancelar'
     }).then((result) => {
         if (result.isConfirmed) {
-            
             $.ajax({
-                url: '/produtos', // Aponta para a rota principal
-                type: 'DELETE',   // Aciona o bloco DELETE que atualiza o status
+                url: '/produtos',
+                type: 'DELETE',
                 data: { id: data.id },
                 success: function(response){
                     if(response.success){
@@ -863,66 +1440,103 @@ $('#botao-apagar-produto').click(function(){
     });
 });
 
-/* REGISTRAR SAIDA */
-/* ==========================================
-   LÓGICA DO MODAL DE SAÍDA DE ESTOQUE
-   ========================================== */
-
-// Função auxiliar para resetar a caixa de seleção
+/* ==========================================================================
+   MODAL DE MOVIMENTAÇÃO DE ESTOQUE (SAÍDA, ENTRADA, AJUSTE + CÓDIGO DE BARRAS)
+   ========================================================================== */
 function resetarSelectProduto() {
-    // Se o Select2 estiver ativo, nós o destruímos para voltar ao normal
     if ($('#saida_id_produto').hasClass("select2-hidden-accessible")) {
         $('#saida_id_produto').select2('destroy');
     }
-    $('#saida_id_produto').empty().append('<option value="">Aguardando seleção do método...</option>');
+    $('#saida_id_produto').empty().append('<option value="">Selecione o modo de leitura acima...</option>');
     $('#saida_id_produto').prop('disabled', true);
+    $('#info-saldo-selecionado').text('');
 }
 
-// 1. Abrir o modal
+// Alternância de rótulo conforme tipo de operação (Saída, Entrada ou Ajuste)
+$('input[name="tipo_operacao_mov"]').on('change', function() {
+    var op = $(this).val();
+    if (op === '2') {
+        $('#label-qtd-mov').text('Novo Saldo em Estoque *');
+        $('#saida_quantidade').attr('min', '0');
+    } else if (op === '0') {
+        $('#label-qtd-mov').text('Qtd. de Entrada *');
+        $('#saida_quantidade').attr('min', '0.01');
+    } else {
+        $('#label-qtd-mov').text('Qtd. de Saída *');
+        $('#saida_quantidade').attr('min', '0.01');
+    }
+});
+
 $('#botao-registrar_saida').click(function(){
     $('#formulario-registrar-saida')[0].reset();
+    $('#lbl-op-saida').trigger('click');
+    $('#box-leitor-modal').hide();
     resetarSelectProduto();
+
+    // Se houver uma linha já selecionada na tabela, pré-seleciona o produto automaticamente!
+    var selectedRow = table.row('.tableSelected');
+    if (selectedRow && selectedRow.data()) {
+        var d = selectedRow.data();
+        $('#saida_id_produto').prop('disabled', false)
+            .empty()
+            .append(new Option(d.codigo + " — " + d.nome, d.id, true, true));
+        $('#info-saldo-selecionado').html('Saldo atual: <strong>' + parseFloat(d.saldo) + '</strong> | Mínimo: <strong>' + parseFloat(d.estoque_minimo) + '</strong>');
+    }
+
     $('#registrar-saida-modal').modal('show');
 });
 
-// 2. Botão de Ler Código de Barras
+// Botão Ler Código de Barras (abre o campo dedicado dentro do modal)
 $('#botao-scan-barcode-saida').click(function() {
-    let codigo = prompt("Aguardando leitura do código de barras...");
-    if (codigo) { processarCodigoBarrasSaida(codigo); }
+    $('#box-leitor-modal').slideDown(150, function() {
+        $('#input-barcode-saida').val('').focus();
+    });
 });
 
-// 3. Botão de Lista Manual (TURBINADO COM SELECT2)
+$('#input-barcode-saida').on('keypress', function(e) {
+    if (e.which === 13) {
+        e.preventDefault();
+        var codigo = $(this).val().trim();
+        if (codigo) {
+            processarCodigoBarrasSaida(codigo);
+        }
+    }
+});
+
+$('#btn-confirmar-barcode-saida').click(function() {
+    var codigo = $('#input-barcode-saida').val().trim();
+    if (codigo) {
+        processarCodigoBarrasSaida(codigo);
+    }
+});
+
+// Botão de Busca Manual com Select2
 $('#botao-manual-saida').click(function() {
-    
+    $('#box-leitor-modal').hide();
     $('#saida_id_produto').empty().append('<option value="">Carregando produtos...</option>');
     
     $.ajax({
         url: '/produtos',
         type: 'GET',
         success: function(response){
-            
             $('#saida_id_produto').empty().append('<option value="">Digite o nome ou código...</option>');
             
-            var produtos = response.produtos;
+            var produtos = response.produtos || [];
             produtos.forEach(function(produto) {
                 if (produto.ativo === true || produto.ativo === 1 || produto.ativo === "t") {
-                    // Como estamos juntando "Código — Nome", o Select2 vai pesquisar nos dois automaticamente!
-                    $('#saida_id_produto').append(new Option(produto.codigo + " — " + produto.nome, produto.id));
+                    var opt = new Option(produto.codigo + " — " + produto.nome + " (Saldo: " + parseFloat(produto.saldo) + ")", produto.id);
+                    $(opt).data('saldo', produto.saldo).data('minimo', produto.estoque_minimo);
+                    $('#saida_id_produto').append(opt);
                 }
             });
 
             $('#saida_id_produto').prop('disabled', false);
-            
-            // 🔥 Transforma o select normal em um pesquisável
             $('#saida_id_produto').select2({
-                dropdownParent: $('#registrar-saida-modal'), // Essencial para a pesquisa funcionar dentro de modais do Bootstrap
+                dropdownParent: $('#registrar-saida-modal'),
                 width: '100%',
-                language: "pt-BR" // Deixa os avisos em português
+                language: "pt-BR"
             });
-
-            // Já abre a caixinha de pesquisa automaticamente para o usuário não precisar clicar duas vezes
             $('#saida_id_produto').select2('open');
-
         },
         error: function(){
             Swal.fire('Erro', 'Falha ao carregar a lista de produtos.', 'error');
@@ -931,127 +1545,191 @@ $('#botao-manual-saida').click(function() {
     });
 });
 
-// 4. Botão Limpar
 $('#botao-limpar-form-saida').click(function() {
     $('#formulario-registrar-saida')[0].reset();
+    $('#box-leitor-modal').hide();
     resetarSelectProduto();
 });
 
-// 4. Função que "fatia" o código de barras e busca o produto
+// Função revisada e corrigida para interpretar tanto códigos EAN/Internos quanto etiquetas de 36 dígitos
 function processarCodigoBarrasSaida(codigo) {
-    if (codigo.length !== 36) {
-        Swal.fire('Erro', 'Código de barras inválido. Verifique a leitura.', 'warning');
-        return;
-    }
-
-    let codigo_produto = codigo.substring(16, 28).replace(/^0+/, '');
-
     $.ajax({
         url: '/produto_por_codigo',
         type: 'GET',
-        data: { codigo: codigo_produto },
+        data: { codigo: codigo },
         success: function(response){
             if(response.success){
-                
-                // 🔥 CORREÇÃO 1: Garante que vai pegar o ID correto, seja qual for o nome da variável que seu Python envia!
                 let idCorreto = response.id_produto || response.id;
+                let codExibicao = response.codigo || codigo;
 
-                $('#saida_id_produto').prop('disabled', false);
-                $('#saida_id_produto')
+                if ($('#saida_id_produto').hasClass("select2-hidden-accessible")) {
+                    $('#saida_id_produto').select2('destroy');
+                }
+
+                $('#saida_id_produto').prop('disabled', false)
                     .empty()
-                    .append(new Option(codigo_produto + " — " + response.nome, idCorreto, true, true))
+                    .append(new Option(codExibicao + " — " + response.nome, idCorreto, true, true))
                     .trigger('change');
 
+                $('#info-saldo-selecionado').html(
+                    'Saldo disponível: <strong>' + response.saldo + '</strong> | Estoque mínimo: <strong>' + response.estoque_minimo + '</strong>'
+                );
+                $('#input-barcode-saida').val('');
                 $('#saida_quantidade').focus();
-
             } else {
-                Swal.fire('Não Encontrado', 'O produto bipado não foi encontrado no sistema.', 'error');
+                Swal.fire('Não Encontrado', response.error || 'O código bipado não corresponde a nenhum produto ativo.', 'error');
             }
         },
         error: function(){
-            Swal.fire('Erro', 'Falha ao consultar o produto no servidor.', 'error');
+            Swal.fire('Erro', 'Falha ao consultar o código de barras no servidor.', 'error');
         }
     });
 }
 
-// 5. Enviar o formulário para o Backend (Registrar a Saída)
+// Submissão da Movimentação (Saída, Entrada ou Ajuste)
 $('#formulario-registrar-saida').submit(function(e){
     e.preventDefault();
 
     let idProduto = $('#saida_id_produto').val();
     let quantidade = $('#saida_quantidade').val();
-    
-    // Captura o texto do item selecionado (Ex: "1234 — Parafuso")
-    let nomeProduto = $('#saida_id_produto option:selected').text(); 
+    let operacao = $('input[name="tipo_operacao_mov"]:checked').val() || '1';
+    let observacao = $('#saida_observacao').val();
+    let nomeProduto = escapeHtml($('#saida_id_produto option:selected').text());
 
     if(!idProduto) {
         Swal.fire('Atenção', 'Selecione ou bipe um produto primeiro.', 'warning');
         return;
     }
 
-    if(quantidade <= 0) {
+    if(operacao !== '2' && parseFloat(quantidade) <= 0) {
         Swal.fire('Atenção', 'A quantidade deve ser maior que zero.', 'warning');
         return;
     }
 
-    // 🔥 NOVA TELA DE CONFIRMAÇÃO ANTES DE SALVAR 🔥
+    let MapTitulo = { '1': 'Confirmar Saída?', '0': 'Confirmar Entrada?', '2': 'Confirmar Ajuste de Inventário?' };
+    let MapCor = { '1': '#D90429', '0': '#1F242D', '2': '#1F242D' };
+
     Swal.fire({
-        title: 'Confirmar Saída?',
-        html: `Você tem certeza que deseja registrar a saída de <b>${quantidade}</b> unidade(s) de:<br><br><span class="text-info">${nomeProduto}</span>?`,
+        title: MapTitulo[operacao],
+        html: `Produto: <b>${nomeProduto}</b><br>Valor informado: <b>${escapeHtml(quantidade)}</b>`,
         icon: 'question',
         showCancelButton: true,
-        confirmButtonColor: '#28a745', // Verde para confirmar
-        cancelButtonColor: '#d33',     // Vermelho para cancelar
-        confirmButtonText: '<i class="fas fa-check"></i> Sim, confirmar!',
-        cancelButtonText: '<i class="fas fa-times"></i> Cancelar'
+        confirmButtonColor: MapCor[operacao],
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="fas fa-check"></i> Confirmar',
+        cancelButtonText: 'Cancelar'
     }).then((result) => {
-        
-        // Só entra aqui se o usuário clicou no botão verde (Sim)
         if (result.isConfirmed) {
-            
             $.ajax({
                 url: '/registrar_movimentacao', 
                 type: 'POST', 
                 data: {
                     id_produto: idProduto,
                     quantidade: quantidade,
-                    operacao: 1 // 1 para SAÍDA
+                    operacao: operacao,
+                    observacao: observacao
                 },
                 success: function(response){
                     if(response.success){
                         $('#registrar-saida-modal').modal('hide');
                         table.ajax.reload(null, false);
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Saída Registrada',
-                            text: 'O estoque foi atualizado com sucesso.',
-                            timer: 1500,
-                            showConfirmButton: false
-                        });
+
+                        if (response.alerta_estoque) {
+                            Swal.fire({
+                                icon: response.alerta_estoque.nivel === 'critico' ? 'warning' : 'info',
+                                title: 'Movimentação Salva com Alerta!',
+                                text: response.alerta_estoque.mensagem,
+                                confirmButtonColor: '#D90429'
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Estoque Atualizado!',
+                                text: 'Novo saldo: ' + response.saldo_atual + ' un.',
+                                timer: 1600,
+                                showConfirmButton: false
+                            });
+                        }
                     } else {
-                        // Se o backend barrar por falta de saldo, o erro cai aqui!
                         Swal.fire('Operação Bloqueada', response.error, 'error');
                     }
                 },
-                error: function() {
-                    Swal.fire('Erro', 'Erro de comunicação com o servidor.', 'error');
+                error: function(xhr) {
+                    var msg = (xhr.responseJSON && xhr.responseJSON.error) ? xhr.responseJSON.error : 'Erro de comunicação com o servidor.';
+                    Swal.fire('Erro', msg, 'error');
                 }
             });
         }
     });
 });
 
-/* ==========================================
-   LÓGICA DO MODAL DE HISTÓRICO DE MOVIMENTAÇÕES
-   ========================================== */
-   
+/* ==========================================================================
+   MODAL DE IMPORTAÇÃO EM LOTE VIA EXCEL (.XLSX) OU CSV (.CSV)
+   ========================================================================== */
+$('#botao-importar-planilha').click(function() {
+    $('#form-importar-planilha')[0].reset();
+    $('#resultado-importacao').hide().empty();
+    $('#modal-importar-planilha').modal('show');
+});
+
+$('#form-importar-planilha').submit(function(e) {
+    e.preventDefault();
+    var fileInput = $('#arquivo-planilha')[0];
+    if (!fileInput.files || fileInput.files.length === 0) {
+        Swal.fire('Atenção', 'Selecione um arquivo .xlsx ou .csv.', 'warning');
+        return;
+    }
+
+    var formData = new FormData();
+    formData.append('arquivo', fileInput.files[0]);
+
+    var btn = $('#btn-submit-importacao');
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Processando planilha...');
+
+    $.ajax({
+        url: '/importar_planilha_produtos',
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(res) {
+            btn.prop('disabled', false).html('<i class="fas fa-cloud-upload-alt mr-1"></i> Processar e Importar Planilha');
+            if (res.success) {
+                table.ajax.reload(null, false);
+                var htmlResumo = `
+                    <div class="alert alert-success mb-0">
+                        <h6 class="font-weight-bold mb-1"><i class="fas fa-check-circle mr-1"></i> Importação Concluída!</h6>
+                        <div>Novos produtos cadastrados: <strong>${res.inseridos}</strong> | Produtos atualizados: <strong>${res.atualizados}</strong></div>
+                `;
+                if (res.erros && res.erros.length > 0) {
+                    htmlResumo += `<hr class="my-2"><div class="small text-danger"><strong>Avisos (${res.erros_count}):</strong><ul class="mb-0 pl-3">`;
+                    res.erros.forEach(function(err) {
+                        htmlResumo += `<li>${escapeHtml(err)}</li>`;
+                    });
+                    htmlResumo += `</ul></div>`;
+                }
+                htmlResumo += `</div>`;
+                $('#resultado-importacao').html(htmlResumo).show();
+            } else {
+                Swal.fire('Erro na Importação', res.error, 'error');
+            }
+        },
+        error: function(xhr) {
+            btn.prop('disabled', false).html('<i class="fas fa-cloud-upload-alt mr-1"></i> Processar e Importar Planilha');
+            var msg = (xhr.responseJSON && xhr.responseJSON.error) ? xhr.responseJSON.error : 'Falha ao enviar o arquivo.';
+            Swal.fire('Erro na Importação', msg, 'error');
+        }
+    });
+});
+
+/* ==========================================================================
+   MODAL DE HISTÓRICO IMUTÁVEL DE MOVIMENTAÇÕES
+   ========================================================================== */
 var tabelaHistorico = null;
 
-// Função para abrir o modal e carregar os dados
 $('#botao-historico').click(function() {
     $('#modal-historico').modal('show');
 
-    // Se a tabela ainda não foi criada, inicializamos
     if (tabelaHistorico === null) {
         tabelaHistorico = $('#tabela-historico').DataTable({
             ajax: {
@@ -1059,122 +1737,77 @@ $('#botao-historico').click(function() {
                 dataSrc: 'historico'
             },
             columns: [
-                { data: "produto_nome", title: "Produto" },
-                { data: "produto_codigo", title: "Código" },
+                { data: "data_formatada", title: "Data / Hora" },
+                { 
+                    data: "produto_nome", 
+                    title: "Produto",
+                    className: "text-left font-weight-bold",
+                    render: function(d) { return escapeHtml(d); }
+                },
+                { 
+                    data: "produto_codigo", 
+                    title: "Código",
+                    render: function(d) { return '<code>' + escapeHtml(d) + '</code>'; }
+                },
                 { 
                     data: "operacao", 
-                    title: "Operação",
+                    title: "Tipo",
                     render: function(data) {
                         if (data == 1) {
-                            return '<span class="badge badge-danger">Retirada</span>';
-                        } else {
+                            return '<span class="badge badge-danger">Saída</span>';
+                        } else if (data == 0) {
                             return '<span class="badge badge-success">Entrada</span>';
+                        } else {
+                            return '<span class="badge badge-dark">Ajuste</span>';
                         }
                     }
                 },
                 { 
                     data: "quantidade", 
-                    title: "Qtd",
+                    title: "Qtd. Movimentada",
                     render: function(data) {
-                        return parseFloat(data); // Remove o .0
+                        return '<strong>' + parseFloat(data) + '</strong>';
                     }
                 },
-                { data: "usuario_nome", title: "Usuário" },
-                { data: "data_formatada", title: "Data" }
+                {
+                    data: null,
+                    title: "Saldo (Ant. → Post.)",
+                    render: function(data, type, row) {
+                        if (row.saldo_anterior !== null && row.saldo_posterior !== null && row.saldo_anterior !== undefined) {
+                            return parseFloat(row.saldo_anterior) + ' → <strong>' + parseFloat(row.saldo_posterior) + '</strong>';
+                        }
+                        return '-';
+                    }
+                },
+                {
+                    data: "observacao",
+                    title: "Observação",
+                    render: function(d) { return '<small>' + escapeHtml(d || '-') + '</small>'; }
+                },
+                { 
+                    data: "usuario_nome", 
+                    title: "Usuário",
+                    render: function(d) { return escapeHtml(d); }
+                }
             ],
             language: {
                 url: "/static/js/pt-BR.json"
             },
             columnDefs: [
-                { 
-                    className: "text-center", 
-                    targets: "_all" // Aplica em todas as colunas
-                }
+                { className: "text-center", targets: "_all" }
             ],
-            order: [[5, 'desc']] // Ordena pela data (última coluna) por padrão
+            order: [[0, 'desc']]
         });
     } else {
-        // Se já existe, apenas recarrega os dados
         tabelaHistorico.ajax.reload();
     }
 });
 
-// 2. CORREÇÃO DO BOTÃO ADICIONAR FORNECEDOR (Garante que o clique seja capturado)
-$(document).on('click', '#botao-novo-preco', function(e) {
-    e.preventDefault(); // Impede qualquer comportamento padrão (como enviar form)
-    
-    let id_produto = $('#editar-id').val();
-    $('#novo-preco-id-produto').val(id_produto);
-    $('#novo-preco-valor').val('');
-    
-    $.get('/fornecedores', function(res) {
-        let select = $('#novo-preco-fornecedor');
-        select.empty().append('<option value="">Selecione o fornecedor...</option>');
-        if(res.fornecedores) {
-            res.fornecedores.forEach(function(f) {
-                select.append(new Option(f.nome, f.id));
-            });
-        }
-    });
-
-    $('#modal-adicionar-preco').modal('show');
-});
-
-
-// 3. ATUALIZAÇÃO DO FORMULÁRIO PRINCIPAL PARA ENVIAR OS PREÇOS JUNTO
-$('#editar-formulario').submit(function(e){
-    e.preventDefault();
-
-    // Varre a tabela para pegar os preços alterados
-    let precosAlterados = [];
-    $('#tabela-fornecedores-editar tbody tr').each(function() {
-        let input = $(this).find('.input-preco');
-        if (input.length > 0) {
-            let idFornecedor = input.data('fornecedor');
-            let precoAtual = input.val().replace(',', '.');
-            let precoOriginal = input.data('original'); // Salvo na geração da tabela
-            
-            // Só adiciona na lista se o preço for válido e for DIFERENTE do que estava no banco
-            if (precoAtual && parseFloat(precoAtual) !== parseFloat(precoOriginal)) {
-                precosAlterados.push({ id_fornecedor: idFornecedor, preco: precoAtual });
-            }
-        }
-    });
-
-    $.ajax({
-        url: '/produtos',
-        type: 'PUT',
-        data: {
-            id: $('#editar-id').val(),
-            nome: $('#editar-nome').val(),
-            codigo: $('#editar-codigo').val(),
-            saldo: $('#editar-saldo').val(),
-            estoque_minimo: $('#editar-estoque-minimo').val(),
-            
-            // Transforma o array em um texto JSON para enviar para o Python
-            precos_fornecedores: JSON.stringify(precosAlterados) 
-        },
-        success: function(response){
-            if(response.success){
-                $('#editar-modal').modal('hide');
-                table.ajax.reload(null,false);
-                Swal.fire({
-                    icon: 'success', title: 'Atualizado com sucesso.', 
-                    timer: 1500, showConfirmButton: false
-                });
-            } else {
-                Swal.fire('Erro', response.error, 'error');
-            }
-        }
-    });
-});
-
-/* ==========================================
+/* ==========================================================================
    CRUD DE FORNECEDORES
-   ========================================== */
+   ========================================================================== */
 var tabelaFornecedores = null;
 
-// 1. Abrir Modal Principal e Inicializar Tabela
 $('#botao-gerenciar-fornecedores').click(function() {
     $('#modal-gerenciar-fornecedores').modal('show');
     
@@ -1182,16 +1815,16 @@ $('#botao-gerenciar-fornecedores').click(function() {
         tabelaFornecedores = $('#tabela-crud-fornecedores').DataTable({
             ajax: { url: '/fornecedores', dataSrc: 'fornecedores' },
             columns: [
-                { data: "nome", title: "Empresa" },
-                { data: "whatsapp", title: "WhatsApp", defaultContent: "-" },
-                { data: "email", title: "E-mail", defaultContent: "-" },
-                { data: "forma_pagamento", title: "Pagamento", defaultContent: "-" },
-                { data: "chave_pix", title: "Chave PIX", defaultContent: "-" },
+                { data: "nome", title: "Empresa", render: function(d) { return escapeHtml(d); } },
+                { data: "whatsapp", title: "WhatsApp", defaultContent: "-", render: function(d) { return escapeHtml(d || '-'); } },
+                { data: "email", title: "E-mail", defaultContent: "-", render: function(d) { return escapeHtml(d || '-'); } },
+                { data: "forma_pagamento", title: "Pagamento", defaultContent: "-", render: function(d) { return escapeHtml(d || '-'); } },
+                { data: "chave_pix", title: "Chave PIX", defaultContent: "-", render: function(d) { return escapeHtml(d || '-'); } },
                 { 
                     data: null, title: "Ações", orderable: false,
-                    render: function(data) {
+                    render: function() {
                         return `
-                            <button class="btn btn-primary btn-sm btn-editar-forn mr-1" title="Editar"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-dark btn-sm btn-editar-forn mr-1" title="Editar"><i class="fas fa-edit"></i></button>
                             <button class="btn btn-danger btn-sm btn-apagar-forn" title="Excluir"><i class="fas fa-trash"></i></button>
                         `;
                     }
@@ -1206,7 +1839,6 @@ $('#botao-gerenciar-fornecedores').click(function() {
     }
 });
 
-// 2. Botão Novo Fornecedor (Abre Modal de Form)
 $('#botao-add-fornecedor-crud').click(function() {
     $('#form-crud-fornecedor')[0].reset();
     $('#crud-fornecedor-id').val('');
@@ -1214,7 +1846,6 @@ $('#botao-add-fornecedor-crud').click(function() {
     $('#modal-form-fornecedor').modal('show');
 });
 
-// 3. Botão Editar (Preenche os dados e abre form)
 $('#tabela-crud-fornecedores').on('click', '.btn-editar-forn', function() {
     let data = tabelaFornecedores.row($(this).closest('tr')).data();
     $('#crud-fornecedor-id').val(data.id);
@@ -1228,7 +1859,6 @@ $('#tabela-crud-fornecedores').on('click', '.btn-editar-forn', function() {
     $('#modal-form-fornecedor').modal('show');
 });
 
-// 4. Salvar (Detecta automaticamente se é POST ou PUT)
 $('#form-crud-fornecedor').submit(function(e) {
     e.preventDefault();
     let id = $('#crud-fornecedor-id').val();
@@ -1249,22 +1879,23 @@ $('#form-crud-fornecedor').submit(function(e) {
             if(response.success) {
                 $('#modal-form-fornecedor').modal('hide');
                 tabelaFornecedores.ajax.reload(null, false);
+                carregarFiltroFornecedores();
+                table.ajax.reload(null, false);
                 Swal.fire({icon: 'success', title: 'Salvo com sucesso!', timer: 1500, showConfirmButton: false});
             }
         }
     });
 });
 
-// 5. Excluir Fornecedor (Soft Delete)
 $('#tabela-crud-fornecedores').on('click', '.btn-apagar-forn', function() {
     let data = tabelaFornecedores.row($(this).closest('tr')).data();
     
     Swal.fire({
         title: 'Confirmar exclusão?',
-        text: "O fornecedor '" + data.nome + "' será inativado e deixará de aparecer em novas compras.",
+        text: "O fornecedor '" + data.nome + "' será inativado.",
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#d33',
+        confirmButtonColor: '#D90429',
         cancelButtonText: 'Cancelar',
         confirmButtonText: 'Sim, inativar!'
     }).then((result) => {
@@ -1276,6 +1907,8 @@ $('#tabela-crud-fornecedores').on('click', '.btn-apagar-forn', function() {
                 success: function(response) {
                     if(response.success) {
                         tabelaFornecedores.ajax.reload(null, false);
+                        carregarFiltroFornecedores();
+                        table.ajax.reload(null, false);
                         Swal.fire({icon: 'success', title: 'Fornecedor inativado!', timer: 1500, showConfirmButton: false});
                     }
                 }
@@ -1284,10 +1917,546 @@ $('#tabela-crud-fornecedores').on('click', '.btn-apagar-forn', function() {
     });
 });
 
-
-// Exportar Tabela de Produtos para CSV
 $('#botao-exportar-produtos').click(function() {
     window.location.href = '/exportar_produtos_csv';
+});
+
+/* ==========================================================================
+   GERADOR DE LISTA DE COMPRAS EM PDF (FILTRO POR STATUS OU FORNECEDOR)
+   ========================================================================== */
+
+function obterStatusProdutoObj(produto) {
+    var saldo = parseFloat(produto.saldo) || 0;
+    var minimo = parseFloat(produto.estoque_minimo) || 0;
+    if (minimo > 0 && saldo < minimo) {
+        return { chave: 'critico', rotulo: 'CRÍTICO', badgeClass: 'badge-estoque-critico' };
+    } else if (minimo > 0 && saldo <= minimo * 1.5) {
+        return { chave: 'atencao', rotulo: 'ATENÇÃO', badgeClass: 'badge-estoque-atencao' };
+    }
+    return { chave: 'ok', rotulo: 'NORMAL', badgeClass: 'badge-estoque-ok' };
+}
+
+function renderizarTabelaListaCompras() {
+    var statusFiltro = $('#pdf-filtro-status').val() || 'critico_atencao';
+    var fornFiltro = $('#pdf-filtro-fornecedor').val() || 'todos';
+    var modoFornecedor = $('#pdf-modo-fornecedor').val() || 'menor_preco';
+
+    // Habilita o seletor de modo de fornecedor apenas quando um fornecedor específico é selecionado
+    if (fornFiltro !== 'todos' && fornFiltro !== 'sem_fornecedor') {
+        $('#pdf-modo-fornecedor').prop('disabled', false);
+    } else {
+        $('#pdf-modo-fornecedor').prop('disabled', true);
+    }
+
+    var todosProdutos = table.rows().data().toArray();
+    var itensElegiveis = [];
+
+    todosProdutos.forEach(function(prod) {
+        var st = obterStatusProdutoObj(prod);
+
+        // 1. Filtra por Status
+        if (statusFiltro === 'critico_atencao' && !(st.chave === 'critico' || st.chave === 'atencao')) {
+            return;
+        }
+        if (statusFiltro === 'critico' && st.chave !== 'critico') {
+            return;
+        }
+        if (statusFiltro === 'atencao' && st.chave !== 'atencao') {
+            return;
+        }
+        if (statusFiltro === 'ok' && st.chave !== 'ok') {
+            return;
+        }
+
+        // 2. Filtra por Fornecedor e define qual fornecedor/preço exibir na linha
+        var fornNome = prod.fornecedor_menor_preco || 'Não vinculado';
+        var fornWhatsapp = prod.fornecedor_whatsapp || '';
+        var fornPagamento = prod.fornecedor_pagamento || '';
+        var precoUnit = parseFloat(prod.menor_preco) || 0;
+        var idFornMenor = prod.id_fornecedor_menor_preco ? String(prod.id_fornecedor_menor_preco) : '';
+
+        if (fornFiltro === 'sem_fornecedor') {
+            if (idFornMenor !== '') return;
+        } else if (fornFiltro !== 'todos') {
+            if (modoFornecedor === 'menor_preco') {
+                if (idFornMenor !== String(fornFiltro)) return;
+            } else {
+                // Busca na lista de todos os fornecedores vinculados a este produto
+                var listaFornProd = Array.isArray(prod.fornecedores_precos) ? prod.fornecedores_precos : [];
+                var encontrado = listaFornProd.find(function(fp) {
+                    return String(fp.id_fornecedor) === String(fornFiltro);
+                });
+                if (!encontrado) return;
+                fornNome = encontrado.fornecedor_nome || fornNome;
+                fornWhatsapp = encontrado.whatsapp || '';
+                fornPagamento = encontrado.forma_pagamento || '';
+                precoUnit = parseFloat(encontrado.preco) || 0;
+            }
+        }
+
+        var saldo = parseFloat(prod.saldo) || 0;
+        var minimo = parseFloat(prod.estoque_minimo) || 0;
+        // Sugestão inteligente de compra: repor até o estoque mínimo (ou 1 un. se já estiver acima do mínimo)
+        var qtdSugerida = (minimo > saldo) ? Math.ceil((minimo - saldo) * 100) / 100 : (minimo > 0 ? Math.ceil(minimo * 0.5) : 1);
+        if (qtdSugerida <= 0) qtdSugerida = 1;
+
+        itensElegiveis.push({
+            id: prod.id,
+            nome: prod.nome || '-',
+            codigo: prod.codigo || '-',
+            localizacao: prod.localizacao || '-',
+            saldo: saldo,
+            estoque_minimo: minimo,
+            status: st,
+            fornecedor_nome: fornNome,
+            fornecedor_whatsapp: fornWhatsapp,
+            fornecedor_pagamento: fornPagamento,
+            preco_unitario: precoUnit,
+            qtd_sugerida: qtdSugerida
+        });
+    });
+
+    var tbody = $('#tbody-lista-compras');
+    tbody.empty();
+
+    if (itensElegiveis.length === 0) {
+        $('#pdf-check-todos').prop('checked', false);
+        tbody.append(`
+            <tr>
+                <td colspan="9" class="text-muted py-4 font-italic">
+                    <i class="fas fa-search mr-1"></i> Nenhum produto encontrado para a combinação de Status e Fornecedor selecionada.
+                </td>
+            </tr>
+        `);
+        recalcularTotaisListaCompras();
+        return;
+    }
+
+    $('#pdf-check-todos').prop('checked', true);
+
+    itensElegiveis.forEach(function(item) {
+        var subtotal = item.qtd_sugerida * item.preco_unitario;
+        var tr = $(`
+            <tr class="linha-item-compra"
+                data-id="${item.id}"
+                data-nome="${escapeHtml(item.nome)}"
+                data-codigo="${escapeHtml(item.codigo)}"
+                data-localizacao="${escapeHtml(item.localizacao)}"
+                data-status="${escapeHtml(item.status.rotulo)}"
+                data-saldo="${item.saldo}"
+                data-minimo="${item.estoque_minimo}"
+                data-fornecedor="${escapeHtml(item.fornecedor_nome)}"
+                data-whatsapp="${escapeHtml(item.fornecedor_whatsapp)}"
+                data-pagamento="${escapeHtml(item.fornecedor_pagamento)}"
+                data-preco="${item.preco_unitario}">
+                <td class="align-middle">
+                    <input type="checkbox" class="check-item-compra" checked>
+                </td>
+                <td class="text-left align-middle font-weight-bold">${escapeHtml(item.nome)}</td>
+                <td class="align-middle"><code>${escapeHtml(item.codigo)}</code></td>
+                <td class="align-middle"><span class="${item.status.badgeClass}">${item.status.rotulo}</span></td>
+                <td class="align-middle"><strong>${item.saldo}</strong> <small class="text-muted">/ mín. ${item.estoque_minimo}</small></td>
+                <td class="align-middle">${escapeHtml(item.fornecedor_nome)}</td>
+                <td class="align-middle">
+                    <input type="number" class="form-control form-control-sm text-center font-weight-bold input-qtd-compra"
+                           value="${item.qtd_sugerida}" min="0.01" step="any">
+                </td>
+                <td class="align-middle">${item.preco_unitario > 0 ? formatarMoedaBR(item.preco_unitario) : '-'}</td>
+                <td class="align-middle font-weight-bold text-dark cell-subtotal-compra">
+                    ${item.preco_unitario > 0 ? formatarMoedaBR(subtotal) : '-'}
+                </td>
+            </tr>
+        `);
+        tbody.append(tr);
+    });
+
+    recalcularTotaisListaCompras();
+}
+
+function recalcularTotaisListaCompras() {
+    var qtdItens = 0;
+    var valorTotal = 0;
+
+    $('#tbody-lista-compras tr.linha-item-compra').each(function() {
+        var tr = $(this);
+        var marcado = tr.find('.check-item-compra').is(':checked');
+        var preco = parseFloat(tr.data('preco')) || 0;
+        var qtd = parseFloat(tr.find('.input-qtd-compra').val()) || 0;
+        if (qtd < 0) qtd = 0;
+
+        var subtotal = qtd * preco;
+        tr.find('.cell-subtotal-compra').text(preco > 0 ? formatarMoedaBR(subtotal) : '-');
+        tr.toggleClass('text-muted bg-light', !marcado);
+
+        if (marcado && qtd > 0) {
+            qtdItens++;
+            valorTotal += subtotal;
+        }
+    });
+
+    $('#pdf-resumo-qtd-itens').text(qtdItens);
+    $('#pdf-resumo-valor-total').text(formatarMoedaBR(valorTotal));
+}
+
+function coletarItensSelecionadosParaPDF() {
+    var selecionados = [];
+    var volumeTotalUnidades = 0;
+    var valorTotal = 0;
+
+    $('#tbody-lista-compras tr.linha-item-compra').each(function() {
+        var tr = $(this);
+        if (!tr.find('.check-item-compra').is(':checked')) return;
+
+        var qtd = parseFloat(tr.find('.input-qtd-compra').val()) || 0;
+        if (qtd <= 0) return;
+
+        var preco = parseFloat(tr.data('preco')) || 0;
+        var subtotal = qtd * preco;
+
+        volumeTotalUnidades += qtd;
+        valorTotal += subtotal;
+
+        selecionados.push({
+            nome: String(tr.data('nome') || '-'),
+            codigo: String(tr.data('codigo') || '-'),
+            localizacao: String(tr.data('localizacao') || '-'),
+            status: String(tr.data('status') || '-'),
+            saldo: parseFloat(tr.data('saldo')) || 0,
+            minimo: parseFloat(tr.data('minimo')) || 0,
+            fornecedor: String(tr.data('fornecedor') || 'Não vinculado'),
+            whatsapp: String(tr.data('whatsapp') || ''),
+            pagamento: String(tr.data('pagamento') || ''),
+            qtdComprar: qtd,
+            precoUnitario: preco,
+            subtotal: subtotal
+        });
+    });
+
+    return {
+        itens: selecionados,
+        totalItens: selecionados.length,
+        volumeTotal: volumeTotalUnidades,
+        valorTotal: valorTotal
+    };
+}
+
+// Abrir modal de Lista de Compras (sincronizando com o filtro atual da tela se ativo)
+$('#botao-lista-compras-pdf').on('click', function() {
+    carregarFiltroFornecedores();
+
+    if (filtroStatusAtual === 'critico' || filtroStatusAtual === 'atencao' || filtroStatusAtual === 'ok') {
+        $('#pdf-filtro-status').val(filtroStatusAtual);
+    } else {
+        $('#pdf-filtro-status').val('critico_atencao');
+    }
+
+    if (filtroFornecedorAtual && filtroFornecedorAtual !== 'todos') {
+        $('#pdf-filtro-fornecedor').val(filtroFornecedorAtual);
+    } else {
+        $('#pdf-filtro-fornecedor').val('todos');
+    }
+
+    renderizarTabelaListaCompras();
+    $('#modal-lista-compras').modal('show');
+});
+
+$('#pdf-filtro-status, #pdf-filtro-fornecedor, #pdf-modo-fornecedor').on('change', function() {
+    renderizarTabelaListaCompras();
+});
+
+$('#pdf-check-todos').on('change', function() {
+    var estado = $(this).is(':checked');
+    $('#tbody-lista-compras .check-item-compra').prop('checked', estado);
+    recalcularTotaisListaCompras();
+});
+
+$(document).on('change input', '#tbody-lista-compras .check-item-compra, #tbody-lista-compras .input-qtd-compra', function() {
+    recalcularTotaisListaCompras();
+});
+
+// 1. Gerar e baixar arquivo PDF usando jsPDF + AutoTable (com identidade visual Preto & Vermelho)
+$('#btn-baixar-pdf-compras').on('click', function() {
+    var dados = coletarItensSelecionadosParaPDF();
+    if (dados.itens.length === 0) {
+        Swal.fire('Atenção', 'Selecione ao menos um item com quantidade maior que zero para gerar o PDF.', 'warning');
+        return;
+    }
+
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+        // Fallback automático para a janela de impressão nativa caso a CDN esteja inacessível
+         $('#btn-imprimir-lista-compras').trigger('click');
+        return;
+    }
+
+    var jsPDF = window.jspdf.jsPDF;
+    var doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+    var agora = new Date();
+    var dataHoraStr = agora.toLocaleDateString('pt-BR') + ' às ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    var statusTexto = $('#pdf-filtro-status option:selected').text().replace(/[^\w\sÀ-ÿ+()/-]/g, '').trim();
+    var fornTexto = $('#pdf-filtro-fornecedor option:selected').text().trim();
+    var observacoes = ($('#pdf-observacoes').val() || '').trim();
+
+    // Cabeçalho Institucional Preto (#121316) com faixa Vermelha (#D90429)
+    doc.setFillColor(18, 19, 22);
+    doc.rect(0, 0, 297, 26, 'F');
+    doc.setFillColor(217, 4, 41);
+    doc.rect(0, 26, 297, 2.2, 'F');
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(15);
+    doc.text('LISTA DE COMPRAS E REPOSICAO DE ESTOQUE', 14, 12);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9.5);
+    doc.text('Sistema Gerencial de Controle de Estoque & PCP', 14, 19);
+    doc.text('Emitido em: ' + dataHoraStr, 283, 12, { align: 'right' });
+    doc.text('Responsavel: {{ current_user.name }}', 283, 19, { align: 'right' });
+
+    // Quadro de Filtros e Resumo Financeiro
+    doc.setFillColor(244, 245, 247);
+    doc.setDrawColor(220, 224, 230);
+    doc.roundedRect(14, 32, 269, 18, 2, 2, 'FD');
+
+    doc.setTextColor(31, 36, 45);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.text('Filtro de Status:', 18, 39);
+    doc.setFont('helvetica', 'normal');
+    doc.text(statusTexto, 47, 39);
+
+    doc.setFont('helvetica', 'bold');
+    doc.text('Fornecedor:', 18, 45.5);
+    doc.setFont('helvetica', 'normal');
+    var infoExtraForn = '';
+    if ($('#pdf-filtro-fornecedor').val() !== 'todos' && $('#pdf-filtro-fornecedor').val() !== 'sem_fornecedor' && dados.itens[0]) {
+        if (dados.itens[0].whatsapp) infoExtraForn += ' | WhatsApp: ' + dados.itens[0].whatsapp;
+        if (dados.itens[0].pagamento) infoExtraForn += ' | Pagamento: ' + dados.itens[0].pagamento;
+    }
+    doc.text(fornTexto + infoExtraForn, 40, 45.5);
+
+    doc.setFont('helvetica', 'bold');
+    doc.text('Itens na Lista: ' + dados.totalItens + '   |   Volume Total: ' + dados.volumeTotal.toLocaleString('pt-BR') + ' un.', 280, 39, { align: 'right' });
+    doc.setTextColor(217, 4, 41);
+    doc.setFontSize(10.5);
+    doc.text('VALOR TOTAL ESTIMADO: ' + formatarMoedaBR(dados.valorTotal), 280, 46, { align: 'right' });
+
+    // Linhas da Tabela
+    var linhasTabela = dados.itens.map(function(item, idx) {
+        return [
+            String(idx + 1),
+            item.codigo,
+            item.nome,
+            item.localizacao,
+            item.status,
+            item.saldo + ' / ' + item.minimo,
+            item.fornecedor,
+            item.qtdComprar.toLocaleString('pt-BR'),
+            item.precoUnitario > 0 ? formatarMoedaBR(item.precoUnitario) : '-',
+            item.precoUnitario > 0 ? formatarMoedaBR(item.subtotal) : '-'
+        ];
+    });
+
+    doc.autoTable({
+        startY: 54,
+        margin: { left: 14, right: 14, bottom: 14 },
+        tableWidth: 269,
+        head: [['#', 'Codigo', 'Descricao do Produto', 'Local.', 'Status', 'Saldo / Min.', 'Fornecedor', 'Qtd.', 'Preco Unit.', 'Subtotal']],
+        body: linhasTabela,
+        foot: [[
+            '', '', 'TOTAL GERAL DA LISTA DE COMPRAS', '', '', '',
+            dados.totalItens + ' item(ns)',
+            dados.volumeTotal.toLocaleString('pt-BR') + ' un.',
+            '',
+            formatarMoedaBR(dados.valorTotal)
+        ]],
+        theme: 'grid',
+        styles: {
+            font: 'helvetica',
+            fontSize: 7.8,
+            cellPadding: 2,
+            overflow: 'linebreak',
+            textColor: [31, 36, 45],
+            valign: 'middle'
+        },
+        headStyles: {
+            fillColor: [18, 19, 22],
+            textColor: [255, 255, 255],
+            fontStyle: 'bold',
+            fontSize: 8,
+            halign: 'center'
+        },
+        footStyles: {
+            fillColor: [244, 245, 247],
+            textColor: [217, 4, 41],
+            fontStyle: 'bold',
+            fontSize: 8,
+            halign: 'center'
+        },
+        columnStyles: {
+            0: { halign: 'center', cellWidth: 8 },
+            1: { halign: 'center', cellWidth: 25 },
+            2: { halign: 'left', fontStyle: 'bold', cellWidth: 72 },
+            3: { halign: 'center', cellWidth: 21 },
+            4: { halign: 'center', cellWidth: 18 },
+            5: { halign: 'center', cellWidth: 20 },
+            6: { halign: 'left', cellWidth: 40 },
+            7: { halign: 'center', fontStyle: 'bold', cellWidth: 18 },
+            8: { halign: 'right', cellWidth: 23 },
+            9: { halign: 'right', fontStyle: 'bold', cellWidth: 24 }
+        },
+        didParseCell: function(hookData) {
+            if (hookData.section === 'foot' && hookData.column.index === 9) {
+                hookData.cell.styles.halign = 'right';
+            }
+            if (hookData.section === 'body' && hookData.column.index === 4) {
+                var val = String(hookData.cell.raw || '');
+                if (val.indexOf('CRÍTICO') !== -1 || val.indexOf('CRITICO') !== -1) {
+                    hookData.cell.styles.textColor = [217, 4, 41];
+                    hookData.cell.styles.fontStyle = 'bold';
+                } else if (val.indexOf('ATENÇÃO') !== -1 || val.indexOf('ATENCAO') !== -1) {
+                    hookData.cell.styles.textColor = [180, 83, 9];
+                    hookData.cell.styles.fontStyle = 'bold';
+                }
+            }
+        }
+    });
+
+    var finalY = doc.lastAutoTable.finalY + 8;
+    if (observacoes) {
+        if (finalY > 180) {
+            doc.addPage();
+            finalY = 20;
+        }
+        doc.setTextColor(31, 36, 45);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.text('Observacoes do Pedido:', 14, finalY);
+        doc.setFont('helvetica', 'normal');
+        doc.text(observacoes, 53, finalY);
+    }
+
+    var nomeArquivoData = agora.toISOString().slice(0, 10);
+    doc.save('lista_de_compras_' + nomeArquivoData + '.pdf');
+});
+
+// 2. Visualizar e Imprimir / Salvar como PDF via navegador
+$('#btn-imprimir-lista-compras').on('click', function() {
+    var dados = coletarItensSelecionadosParaPDF();
+    if (dados.itens.length === 0) {
+        Swal.fire('Atenção', 'Selecione ao menos um item com quantidade maior que zero para imprimir.', 'warning');
+        return;
+    }
+
+    var agora = new Date();
+    var dataHoraStr = agora.toLocaleDateString('pt-BR') + ' às ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    var statusTexto = $('#pdf-filtro-status option:selected').text().trim();
+    var fornTexto = $('#pdf-filtro-fornecedor option:selected').text().trim();
+    var observacoes = ($('#pdf-observacoes').val() || '').trim();
+
+    var linhasHtml = dados.itens.map(function(item, i) {
+        return `
+            <tr>
+                <td>${i + 1}</td>
+                <td><code>${escapeHtml(item.codigo)}</code></td>
+                <td style="text-align:left;font-weight:bold;">${escapeHtml(item.nome)}</td>
+                <td>${escapeHtml(item.localizacao)}</td>
+                <td><strong>${escapeHtml(item.status)}</strong></td>
+                <td>${item.saldo} / ${item.minimo}</td>
+                <td style="text-align:left;">${escapeHtml(item.fornecedor)}</td>
+                <td><strong>${item.qtdComprar.toLocaleString('pt-BR')}</strong></td>
+                <td style="text-align:right;">${item.precoUnitario > 0 ? formatarMoedaBR(item.precoUnitario) : '-'}</td>
+                <td style="text-align:right;font-weight:bold;">${item.precoUnitario > 0 ? formatarMoedaBR(item.subtotal) : '-'}</td>
+            </tr>
+        `;
+    }).join('');
+
+    var win = window.open('', '_blank');
+    win.document.write(`
+        <!DOCTYPE html>
+        <html lang="pt-br">
+        <head>
+            <meta charset="utf-8">
+            <title>Lista de Compras - ${agora.toLocaleDateString('pt-BR')}</title>
+            <style>
+                @page { size: A4 landscape; margin: 8mm; }
+                * { box-sizing: border-box; }
+                body { font-family: Arial, Helvetica, sans-serif; color: #1F242D; margin: 8px; }
+                .header { background: #121316; color: #fff; padding: 12px 16px; border-bottom: 4px solid #D90429; display: flex; justify-content: space-between; align-items: center; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                .header h2 { margin: 0; font-size: 15px; letter-spacing: 0.5px; }
+                .summary { background: #F4F5F7; border: 1px solid #D8DCE3; padding: 8px 12px; margin: 10px 0; display: flex; justify-content: space-between; font-size: 11px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 10px; word-wrap: break-word; overflow-wrap: break-word; }
+                th { background: #1F242D; color: #fff; padding: 5px 4px; text-align: center; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                td { border: 1px solid #D8DCE3; padding: 4px 5px; text-align: center; vertical-align: middle; }
+                tr:nth-child(even) { background: #F9FAFB; }
+                .total-row td { background: #F4F5F7; font-weight: bold; color: #D90429; font-size: 11px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <div>
+                    <h2>LISTA DE COMPRAS E REPOSIÇÃO DE ESTOQUE</h2>
+                    <small>Controle de Estoque & PCP</small>
+                </div>
+                <div style="text-align:right;font-size:11px;">
+                    <div>Emitido em: ${escapeHtml(dataHoraStr)}</div>
+                    <div>Responsável: {{ current_user.name }}</div>
+                </div>
+            </div>
+            <div class="summary">
+                <div>
+                    <div><strong>Status Filtrado:</strong> ${escapeHtml(statusTexto)}</div>
+                    <div><strong>Fornecedor:</strong> ${escapeHtml(fornTexto)}</div>
+                </div>
+                <div style="text-align:right;">
+                    <div><strong>Itens Selecionados:</strong> ${dados.totalItens} (${dados.volumeTotal.toLocaleString('pt-BR')} un.)</div>
+                    <div style="color:#D90429;font-size:13px;"><strong>Total Estimado: ${formatarMoedaBR(dados.valorTotal)}</strong></div>
+                </div>
+            </div>
+            <table>
+                <colgroup>
+                    <col style="width: 3%;">
+                    <col style="width: 10%;">
+                    <col style="width: 27%;">
+                    <col style="width: 8%;">
+                    <col style="width: 7%;">
+                    <col style="width: 8%;">
+                    <col style="width: 14%;">
+                    <col style="width: 6%;">
+                    <col style="width: 8%;">
+                    <col style="width: 9%;">
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Código</th>
+                        <th>Produto</th>
+                        <th>Local.</th>
+                        <th>Status</th>
+                        <th>Saldo/Mín.</th>
+                        <th>Fornecedor</th>
+                        <th>Qtd.</th>
+                        <th>Preço Unit.</th>
+                        <th>Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>${linhasHtml}</tbody>
+                <tfoot>
+                    <tr class="total-row">
+                        <td colspan="7" style="text-align:right;">TOTAL ESTIMADO DA COMPRA:</td>
+                        <td>${dados.volumeTotal.toLocaleString('pt-BR')} un.</td>
+                        <td></td>
+                        <td style="text-align:right;">${formatarMoedaBR(dados.valorTotal)}</td>
+                    </tr>
+                </tfoot>
+            </table>
+            ${observacoes ? '<p style="margin-top:14px;font-size:12px;"><strong>Observações:</strong> ' + escapeHtml(observacoes) + '</p>' : ''}
+            <script>window.onload = function() { window.print(); };<\/script>
+        </body>
+        </html>
+    `);
+    win.document.close();
 });
 
 </script>

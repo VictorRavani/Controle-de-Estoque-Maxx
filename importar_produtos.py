@@ -162,14 +162,24 @@ def importar_produtos():
 
     produtos_inseridos = 0
     produtos_ignorados = 0
+    seq_interno = 1
 
     sql = """
         INSERT INTO public.produtos (nome, codigo, saldo, ativo, estoque_minimo)
         VALUES (%s, %s, 0, true, 0)
     """
 
+    codigos_usados = set()
     for nome, codigo in itens:
-        sucesso = db.writeRaw(sql, (nome, codigo))
+        codigo_limpo = str(codigo).strip() if codigo else ""
+        if not codigo_limpo or codigo_limpo.upper() in ("SEM CODIGO", "SEM CÓDIGO", "-") or codigo_limpo in codigos_usados:
+            while f"INT-{seq_interno:05d}" in codigos_usados:
+                seq_interno += 1
+            codigo_limpo = f"INT-{seq_interno:05d}"
+            seq_interno += 1
+        codigos_usados.add(codigo_limpo)
+
+        sucesso = db.writeRaw(sql, (nome.strip(), codigo_limpo))
         if sucesso:
             produtos_inseridos += 1
         else:

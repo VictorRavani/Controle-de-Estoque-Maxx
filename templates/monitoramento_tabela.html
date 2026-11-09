@@ -657,10 +657,11 @@ $('#formIniciar').on('submit', function(e){
 
 });
 
-function preencherOrdem(codigo, seletor){
+function preencherOrdem(codigoBruto, seletor){
+    const codigo = String(codigoBruto || '').trim().replace(/[\x00-\x1F\x7F]/g, '');
 
-    if (codigo.length !== 36){
-        alert("Código inválido");
+    if (!/^\d{36}$/.test(codigo)){
+        msgErro("Código de etiqueta OP inválido (esperado 36 dígitos numéricos).");
         return;
     }
 

@@ -1,124 +1,76 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='bootstrap-4.3.1/css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='senai-1.0.0/css/base.css') }}">
-    <link rel="icon" href="../static/senai-1.0.0/images/transferir.png" type="image/x-icon">
+    <link rel="icon" href="{{ url_for('static', filename='senai-1.0.0/images/transferir.png') }}" type="image/x-icon">
 
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='daterangepicker-master/daterangepicker.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='datatable-1.10.22/datatables.min.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='datatable-1.10.22/buttons.dataTables.min.css') }}">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
-    <title>Sistema de Ordens de Produção</title>
-
-    <footer class="footer-sistema">
-        <div class="footer-container">
-
-            <div class="footer-text">
-                Sistema de Controle de Estoque | 
-                © {{ now.year }} Maxx Alta Pressão.
-            </div>
-
-        </div>
-    </footer>
-
+    <title>Sistema de Controle de Estoque | Maxx Alta Pressão</title>
 </head>
 
-<body>
+<body class="background-page-default">
 
-    <nav class="navbar navbar-expand-lg navbar-light navbar-verde">
-        <!--<a class="navbar-brand" href="#"><img class="d-inline-block align-top" height="25" src="{{ url_for('static', filename='senai-1.0.0/images/SENAI_São_Paulo_logo.png') }}" id="logosenai"></a>-->
-        <!--<a <a class="navbar-brand" href="#"><img class="d-inline-block align-center" height="35"src="{{ url_for('static', filename='senai-1.0.0/images/Logo_Aro_sem_fundo.png') }}" id="logoempresa"></a> -->
-        <!-- <a class="navbar-brand" href="#"><img class="d-inline-block align-top" height="35" src="{{ url_for('static', filename='senai-1.0.0/images/sistema.png') }}"></a> -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-corporativa">
+        <a class="navbar-brand-corp" href="{{ url_for('autenticacao') }}">
+            <span class="brand-badge"><i class="fas fa-warehouse"></i></span>
+            <span>MAXX <span style="color: #D90429;">ESTOQUE</span></span>
+        </a>
+
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#nav1" aria-controls="nav1" aria-expanded="false" aria-label="Navegação">
             <span class="navbar-toggler-icon"></span>
         </button>
+
         <div class="collapse navbar-collapse justify-content-end" id="nav1">
-            <ul class="navbar-nav">
-                {% if current_user.is_authenticated and current_user.privileges >= 1 %}
-                <li class="nav-item mr-3"> <!-- MONITORAMENTO (TODOS) -->
+            <ul class="navbar-nav align-items-lg-center">
+                {% if current_user.is_authenticated and not current_user.precisa_trocar_senha %}
+                    {% if current_user.privileges > 1 %}
+                        <li class="nav-item mr-2">
+                            <a class="nav-link {% if request.endpoint == 'adm_produtos' %}active{% endif %}" href="{{ url_for('adm_produtos') }}">
+                                <i class="fas fa-boxes mr-1"></i> Estoque & Produtos
+                            </a>
+                        </li>
 
-                    {% if current_user.privileges in [2, 3] %}
-                    {#
-                    <!-- Supervisor / Admin / PCP -->
-                    <a class="nav-link btn" href="{{ url_for('monitoramento_OP', processo='geral') }}">
-                        <i class="fas fa-eye"></i> Monitoramento
-                    </a>
-                    #}
-                {% elif current_user.privileges == 1 %}
-                {#
-                    <!-- Operador -->
-                    <a class="btn"
-                    href="{{ url_for('monitoramento_OP', processo=current_user.setor) }}">
-                        <i class="fas fa-eye"></i> Monitoramento
-                    </a>
-                #}
-                {% endif %}
+                        <li class="nav-item mr-2">
+                            <a class="nav-link {% if request.endpoint == 'adm_operadores' %}active{% endif %}" href="{{ url_for('adm_operadores') }}">
+                                <i class="fas fa-id-badge mr-1"></i> Operadores
+                            </a>
+                        </li>
 
-                </li>
-                {#
-                <li class="nav-item mr-3"> <!-- HISTÓRICO (TODOS) -->
-                    <a class="nav-link btn" href="{{ url_for('historico') }}">
-                        <i class="fas fa-clipboard"></i>  Histórico Produção 
-                    </a>
-                </li>
-                #}
-                {% endif %}
-                
-                {% if current_user.is_authenticated and current_user.privileges > 1 %}
-                {#
-                <li class="nav-item mr-3"> <!-- ORDENS DE PRODUÇÃO (ADM) -->
-                    <a class="nav-link btn" href="{{ url_for('setup_pcp') }}">
-                        <i class="fas fa-cogs"></i>  Ordens 
-                    </a>
-                </li>
-                #}
-
-                <li class="nav-item mr-3">
-                    <a class="nav-link btn" href="{{ url_for('adm_produtos') }}">
-                        <i class="fas fa-boxes"></i> Produtos
-                    </a>
-                </li>
-                {#
-                <li class="nav-item mr-3">
-                    <a class="nav-link btn" href="{{ url_for('adm_clientes') }}">
-                        <i class="fas fa-truck"></i> Clientes
-                    </a>
-                </li>
-                #}
-                <li class="nav-item mr-3">
-                    <a class="nav-link btn" href="{{ url_for('adm_operadores') }}">
-                        <i class="fas fa-tools"></i> Operadores
-                    </a>
-                </li>
-
-                {% if current_user.is_authenticated and current_user.privileges == 3 %}
-                    <li class="nav-item mr-3">
-                        <a class="nav-link btn" href="{{ url_for('cadastro_usuarios') }}">
-                            <i class="fas fa-users"></i> Usuários
-                        </a>
-                    </li>
-                {% endif %}
- 
+                        {% if current_user.privileges == 3 %}
+                            <li class="nav-item mr-2">
+                                <a class="nav-link {% if request.endpoint == 'cadastro_usuarios' %}active{% endif %}" href="{{ url_for('cadastro_usuarios') }}">
+                                    <i class="fas fa-users-cog mr-1"></i> Usuários
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% endif %}
                 {% endif %}
 
                 {% if current_user.is_authenticated %}
-                    <li class="nav-item mr-3">
-                        <div class="dropdown show">          
-                                <a class="nav-link btn dropdown-toggle" role="button" id="dropdownUserLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-user"></i>  {{ current_user.usuario }}</a>
-                                <div class="dropdown-menu dropdown-menu-right" id="usermenu" aria-labelledby="dropdownUserLink">
-                                    {% if current_user.is_authenticated and current_user.privileges > 1 %}
-                                   <!-- <a class="dropdown-item" id="changePasswordButton">Alterar senha</a> -->
-                                   <!--  <div class="dropdown-divider"></div> -->       
-                                    {% endif %}                                                 
-                                    <a class="dropdown-item" id="logoutButton">Sair</a>
-                                </div>
+                    <li class="nav-item ml-lg-2">
+                        <div class="dropdown">
+                            <a class="nav-link dropdown-toggle" role="button" id="dropdownUserLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="fas fa-user-circle mr-1" style="color: #D90429;"></i> {{ current_user.usuario }}
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right" id="usermenu" aria-labelledby="dropdownUserLink">
+                                <a class="dropdown-item" id="changePasswordButton">
+                                    <i class="fas fa-key mr-2 text-muted"></i> Alterar senha
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item text-danger font-weight-bold" id="logoutButton">
+                                    <i class="fas fa-sign-out-alt mr-2"></i> Sair
+                                </a>
+                            </div>
                         </div>
                     </li>
                 {% endif %}
@@ -126,32 +78,29 @@
         </div>
     </nav>
 
-    <!-- Modals -->
+    <!-- Modal Alterar Senha -->
     <div class="modal fade" id="changePasswordModal" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-sm" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Alterar a senha</h5>
+                    <h5 class="modal-title"><i class="fas fa-key mr-2"></i> Alterar Senha</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
+                        <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
                     <form id="changePasswordForm">
                         <div class="form-row d-flex justify-content-center text-center">
                             <div class="col-12 p-2">
-                                <i class="fas fa-key bigIcon my-2"></i>
                                 <input type="password" class="form-control my-2" id="currentPassword" placeholder="Senha atual" required>
-                                <input type="password" class="form-control my-2" id="newPassword" placeholder="Nova senha" required>
-                                <input type="password" class="form-control my-2" id="confirmPassword" placeholder="Confirme a nova senha" required>
-                                <span class="formErrorMsg my-2" id="changePasswordError"></span>
-                                <button type="submit" class="btn btn-info my-2 w-100">Alterar</button>
+                                <input type="password" class="form-control my-2" id="newPassword" placeholder="Nova senha (mín. 6 dígitos)" minlength="6" required>
+                                <input type="password" class="form-control my-2" id="confirmPassword" placeholder="Confirme a nova senha" minlength="6" required>
+                                <span class="formErrorMsg d-block my-2" id="changePasswordError"></span>
+                                <button type="submit" class="btn btn-brand my-2 w-100">Salvar Nova Senha</button>
                             </div>
                         </div>
                     </form>
-
                 </div>
-
             </div>
         </div>
     </div>
@@ -159,12 +108,20 @@
     <div class="modal fade" id="message" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-sm" role="document">
             <div class="modal-content">
-                <div class="modal-body text-center"><span id="messageText"></span></div>
+                <div class="modal-body text-center py-4 font-weight-bold"><span id="messageText"></span></div>
             </div>
         </div>
     </div>
 
     {% block content %}{% endblock %}
+
+    <footer class="footer-sistema">
+        <div class="footer-container">
+            <div class="footer-text">
+                Sistema de Controle de Estoque | © {{ now.year }} <strong>Maxx Alta Pressão</strong>
+            </div>
+        </div>
+    </footer>
 
     <script type="text/javascript" src="{{ url_for('static', filename='jquery-3.5.1/jquery-3.5.1.min.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='jquery-3.5.1/popper.min.js') }}"></script>
@@ -181,58 +138,85 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <script> 
+    <script>
+        /* Utilitário global de proteção contra XSS */
+        function escapeHtml(valor) {
+            if (valor === null || valor === undefined) return '';
+            return String(valor)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
 
-        /*Logout request*/
+        /* Configuração global de CSRF para todas as chamadas AJAX */
+        var csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain && csrfToken) {
+                    xhr.setRequestHeader("X-CSRFToken", csrfToken);
+                }
+            },
+            statusCode: {
+                403: function(xhr) {
+                    if (xhr.responseJSON && xhr.responseJSON.force_password_change) {
+                        window.location.href = "/primeiro_acesso";
+                    }
+                }
+            }
+        });
+
+        /* Logout request */
         jQuery('#logoutButton').on('click', function(e){
             jQuery.ajax({
                 url: '/logout',
-                type: 'GET',
+                type: 'POST',
                 data: {}, 
                 success: function(response){
-                    jQuery('#message').modal('show');
-                    jQuery('#messageText').text('Logout efetuado com sucesso');
-                    setTimeout(function(){ 
-                        jQuery('#message').modal('hide'); 
-                        window.location.href = "/";
-                    }, 1500);
+                    window.location.href = "/";
                 } 
             });
         });
 
-        /*Change password request*/
+        /* Change password request */
         jQuery('#changePasswordButton').on('click', function(e){
+            jQuery('#changePasswordForm')[0].reset();
+            jQuery('#changePasswordError').text('');
             jQuery('#changePasswordModal').modal('show');
         });
-        $('#editar-confirmar-senha').on('blur', function () {
-            if ($('#editar-nova-senha').val() !== $('#editar-confirmar-senha').val()) {
-                $('#editar-confirmar-senha').val('');
-                $('#editarSenhaErro').text('As senhas não conferem!').css('font-size', '18px');
-            } else {
-                $('#editarSenhaErro').text('');
-            }
-        });
+
         jQuery('#changePasswordForm').on('submit', function(e){
             e.preventDefault();
+            var atual = jQuery('#currentPassword').val();
+            var nova = jQuery('#newPassword').val();
+            var conf = jQuery('#confirmPassword').val();
+
+            if (nova !== conf) {
+                jQuery('#changePasswordError').text('A confirmação da nova senha não confere.');
+                return;
+            }
+            if (nova.length < 6) {
+                jQuery('#changePasswordError').text('A nova senha deve ter no mínimo 6 caracteres.');
+                return;
+            }
+
             jQuery.ajax({
                 url: '/mudarsenha',
                 type: 'PUT',
-                data: {'currentPassword': jQuery('#currentPassword').val(), 'newPassword': jQuery('#newPassword').val()}, 
+                data: {'currentPassword': atual, 'newPassword': nova}, 
                 success: function(response){
-                    jQuery('#changePasswordModal').modal('hide');
                     if(response['changeUserPassword']){
-                        jQuery('#message').modal('show');
-                        jQuery('#messageText').text('A senha foi alterada com sucesso');
-                        setTimeout(function(){ 
-                            jQuery('#message').modal('hide'); 
-                        }, 1500);  
-                    }
-                    else{
-                        jQuery('#message').modal('show');
-                        jQuery('#messageText').text('Não foi possível realizar a alteração: senha atual incorreta');  
-                        setTimeout(function(){ 
-                            jQuery('#message').modal('hide'); 
-                        }, 1500);                        
+                        jQuery('#changePasswordModal').modal('hide');
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Senha alterada!',
+                            text: 'Sua senha foi atualizada com sucesso.',
+                            timer: 1800,
+                            showConfirmButton: false
+                        });
+                    } else {
+                        jQuery('#changePasswordError').text(response['error'] || 'Não foi possível alterar a senha.');
                     }
                 }
             });
@@ -252,7 +236,7 @@
             Swal.fire({
                 icon: 'error',
                 title: 'Erro',
-                timer: 2000,
+                timer: 2500,
                 text: texto
             });
         }
@@ -261,11 +245,10 @@
             Swal.fire({
                 icon: 'warning',
                 title: 'Atenção',
-                timer: 2000,
+                timer: 2500,
                 text: texto
             });
         }
-            
     </script>
 
     {% block scripts %}{% endblock %}

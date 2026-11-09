@@ -1,167 +1,484 @@
+/* ==========================================================================
+   SISTEMA DE CONTROLE DE ESTOQUE — IDENTIDADE VISUAL (PRETO, BRANCO & VERMELHO)
+   Base clara/clean (#F4F5F7 / #FFFFFF), Navegação & Contornos em Preto/Grafite
+   (#121316 / #1F242D) e Destaque Estratégico em Vermelho Corporativo (#D90429)
+   ========================================================================== */
 
-html{height: 100%;}
-.container-fluid {
-    background-size: 100% 100%;
-    background-attachment: fixed;
-}
-
-body{background-color: #F1F1F1; height: 100%;}
-.navbar{background-color: rgb(0 123 255 / 32%); margin-bottom:2px; border-color: #043573;}
-.navbar-light .navbar-nav .nav-link{color: black;}
-.card-body {width: 100% }
-.card-header {background-color: #73040421;}
-.tableSelected{background-color: #FFD480 !important; color:black !important;}
-.bigIcon{font-size: 120px;color: #043573}
-.formErrorMsg{font-size: 10px; color: red;}
-.carousel-indicators li {width: 100px;height: 10px;border-radius: 10%;}
-.carousel-indicators {bottom: -50px;}
-.carousel-control-prev,
-.carousel-control-next {height: 300px; width: 20px;}
-
-
-select.form-control {-moz-appearance: none;-webkit-appearance: none;appearance: none;}
-@keyframes fa-blink {
-    0% { opacity: 1; }
-    50% { opacity: 0.5; }
-    100% { opacity: 0; }
-}
-.fa-blink {
-  -webkit-animation: fa-blink .75s linear infinite;
-  -moz-animation: fa-blink .75s linear infinite;
-  -ms-animation: fa-blink .75s linear infinite;
-  -o-animation: fa-blink .75s linear infinite;
-  animation: fa-blink 1.0s linear infinite;
-}
-
-
-
-.navbar-verde {
-    background-color: rgb(71, 173, 76);
-}
-
-.dropdown-item:hover {
-    background-color: #dcdcdc;
-    color: #000;
-}
-
-.termico {
-    background-color: #ffe5cc !important; /* laranja claro */
-}
-
-.geral {
-    background-color: #fff9cc !important; /* amarelo claro */
-}
-
-.amostra {
-    background-color: #d6d6d6 !important; /* branco cinza claro */
-}
-
-.nao-conforme {
-    background-color: #ffd6d6 !important; /* vermelho claro */
-}
-
-table.dataTable {
-    width: 100% !important;
-}
-
-.nav-link:hover {
-    color: #ffffff !important;        /* cor do texto */
-    background-color: #0d6efd;        /* azul forte (padrão Bootstrap) */
-    transition: 0.2s ease-in-out;
-}
-
-body.login-page {
-    background: linear-gradient(rgba(253, 253, 253, 0.6), rgba(47, 156, 52, 0.671)),
-                url('../images/tela_logo_1.png') no-repeat center center;
-    background-size: cover;
-}
-
-body.background-page-default {
-    background: linear-gradient(rgba(253, 253, 253, 0.6), rgba(76, 233, 84, 0.219)),
-                url('../images/tela_logo_1.png') no-repeat center center;
-    background-size: cover;
+:root {
+    --brand-red: #D90429;
+    --brand-red-hover: #B80322;
+    --brand-red-soft: rgba(217, 4, 41, 0.08);
+    --brand-black: #121316;
+    --brand-charcoal: #1F242D;
+    --brand-gray-dark: #343A46;
+    --brand-gray-muted: #6C757D;
+    --brand-bg-light: #F4F5F7;
+    --brand-surface: #FFFFFF;
+    --brand-border: #E2E6EE;
+    --shadow-sm: 0 2px 8px rgba(18, 19, 22, 0.05);
+    --shadow-md: 0 8px 24px rgba(18, 19, 22, 0.08);
 }
 
 html, body {
     height: 100%;
     margin: 0;
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: var(--brand-bg-light);
+    color: var(--brand-charcoal);
+    -webkit-font-smoothing: antialiased;
 }
 
-.system-title {
-    font-family: Arial, sans-serif;
-    font-weight: bold;
-    color: #0b4200; /* branco para destacar no fundo */
-    letter-spacing: 1.5px;
-    font-size: 1.5rem;
+body {
+    padding-bottom: 50px;
 }
 
-.login-card {
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 20px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-    backdrop-filter: blur(5px);
+.container-fluid {
+    background-size: cover;
+    background-attachment: fixed;
 }
 
-.login-footer {
-    position: absolute;
-    bottom: 15px;
-    width: 100%;
-    color: #6b6969;
-    font-size: 0.85rem;
-    font-family: Arial, sans-serif;
+/* Planos de fundo limpos para não pesar o visual */
+body.background-page-default {
+    background: linear-gradient(180deg, #F8F9FA 0%, #EFF1F5 100%);
+}
+
+body.login-page {
+    background: radial-gradient(circle at top right, rgba(217, 4, 41, 0.07), transparent 45%),
+                linear-gradient(135deg, #F8F9FA 0%, #E9ECEF 100%);
+}
+
+/* ==========================================================================
+   BARRA DE NAVEGAÇÃO SUPERIOR (PRETO / GRAFITE COM FILETADO VERMELHO)
+   ========================================================================== */
+.navbar,
+.navbar-verde,
+.navbar-corporativa {
+    background-color: var(--brand-black) !important;
+    border-bottom: 3px solid var(--brand-red);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 0.55rem 1.25rem;
+}
+
+.navbar-brand-corp {
+    color: #FFFFFF !important;
+    font-weight: 700;
+    font-size: 1.05rem;
     letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none !important;
 }
 
-.bg-login {
-    background: url('static/senai-1.0.0/images/Background.jpg') center/cover no-repeat;
-    min-height: 60vh;
-    padding-top: 5vh;   /* espaço proporcional à tela */
+.navbar-brand-corp .brand-badge {
+    background-color: var(--brand-red);
+    color: #FFFFFF;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
 }
 
-.select2-results__options {
-    max-height: 200px !important;
-    overflow-y: auto !important;
+.navbar .navbar-nav .nav-link,
+.navbar-light .navbar-nav .nav-link {
+    color: #E2E8F0 !important;
+    font-weight: 500;
+    font-size: 0.92rem;
+    padding: 0.45rem 0.9rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
 }
 
-#botao-limpar-form:focus,
-#botao-limpar-form:active {
-    outline: none !important;
-    box-shadow: none !important;
+.navbar .navbar-nav .nav-link:hover,
+.navbar .navbar-nav .nav-link:focus,
+.navbar .navbar-nav .nav-link.active {
+    color: #FFFFFF !important;
+    background-color: var(--brand-red) !important;
+}
+
+.dropdown-menu {
+    border: 1px solid var(--brand-border);
+    border-radius: 8px;
+    box-shadow: var(--shadow-md);
+    padding: 0.4rem 0;
+}
+
+.dropdown-item {
+    font-size: 0.9rem;
+    color: var(--brand-charcoal);
+    padding: 0.5rem 1.1rem;
+    cursor: pointer;
+}
+
+.dropdown-item:hover {
+    background-color: var(--brand-red-soft);
+    color: var(--brand-red);
+}
+
+/* ==========================================================================
+   CARDS, CONTAINERS E DASHBOARD KPIs
+   ========================================================================== */
+.card {
+    background-color: var(--brand-surface) !important;
+    border: 1px solid var(--brand-border) !important;
+    border-radius: 10px !important;
+    box-shadow: var(--shadow-sm);
+}
+
+.card.border-info,
+.card.border-primary,
+.card.border-success {
+    border-color: var(--brand-border) !important;
+    border-top: 3px solid var(--brand-charcoal) !important;
+}
+
+.card-header {
+    background-color: #F8F9FA !important;
+    border-bottom: 1px solid var(--brand-border) !important;
+    font-weight: 600;
+    color: var(--brand-black);
+}
+
+.card-body {
+    width: 100%;
+}
+
+/* Cards de KPI do Dashboard */
+.kpi-card {
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-left: 4px solid var(--brand-charcoal);
+    border-radius: 10px;
+    padding: 1.1rem 1.25rem;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    height: 100%;
+}
+
+.kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.kpi-card.kpi-danger {
+    border-left-color: var(--brand-red);
+}
+
+.kpi-card.kpi-warning {
+    border-left-color: #D97706;
+}
+
+.kpi-card.kpi-dark {
+    border-left-color: var(--brand-black);
+}
+
+.kpi-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--brand-gray-muted);
+    margin-bottom: 0.3rem;
+}
+
+.kpi-value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--brand-black);
+    line-height: 1.2;
+}
+
+.kpi-value.text-brand-red {
+    color: var(--brand-red);
+}
+
+.kpi-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    background-color: #F1F3F6;
+    color: var(--brand-charcoal);
+}
+
+.kpi-card.kpi-danger .kpi-icon {
+    background-color: var(--brand-red-soft);
+    color: var(--brand-red);
+}
+
+/* ==========================================================================
+   BOTÕES CORPORATIVOS (VERMELHO DESTAQUE, PRETO/CINZA ESCURO SECUNDÁRIOS)
+   ========================================================================== */
+.btn {
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.88rem;
+    padding: 0.45rem 0.95rem;
+    transition: all 0.15s ease-in-out;
+}
+
+/* Vermelho estratégico para ações principais e alertas */
+.btn-brand,
+.btn-custom,
+.btn-danger {
+    background-color: var(--brand-red) !important;
+    border-color: var(--brand-red) !important;
+    color: #FFFFFF !important;
+}
+
+.btn-brand:hover,
+.btn-custom:hover,
+.btn-danger:hover {
+    background-color: var(--brand-red-hover) !important;
+    border-color: var(--brand-red-hover) !important;
+    color: #FFFFFF !important;
+}
+
+/* Preto / Grafite para ações primárias/estruturais */
+.btn-info,
+.btn-primary,
+.btn-dark {
+    background-color: var(--brand-charcoal) !important;
+    border-color: var(--brand-charcoal) !important;
+    color: #FFFFFF !important;
+}
+
+.btn-info:hover,
+.btn-primary:hover,
+.btn-dark:hover {
+    background-color: var(--brand-black) !important;
+    border-color: var(--brand-black) !important;
+    color: #FFFFFF !important;
+}
+
+/* Botão secundário neutro com contorno escuro */
+.btn-secondary {
+    background-color: #FFFFFF !important;
+    border: 1px solid #CBD2D9 !important;
+    color: var(--brand-charcoal) !important;
+}
+
+.btn-secondary:hover {
+    background-color: #F1F3F6 !important;
+    border-color: var(--brand-charcoal) !important;
+    color: var(--brand-black) !important;
+}
+
+/* Botão de confirmação/adição com destaque limpo */
+.btn-success {
+    background-color: var(--brand-red) !important;
+    border-color: var(--brand-red) !important;
+    color: #FFFFFF !important;
+}
+
+.btn-success:hover {
+    background-color: var(--brand-red-hover) !important;
+    border-color: var(--brand-red-hover) !important;
+    color: #FFFFFF !important;
 }
 
 .btn:focus,
-.btn:active {
+.btn:active,
+#botao-limpar-form:focus,
+#botao-limpar-form:active {
     outline: none !important;
-    box-shadow: none !important;
+    box-shadow: 0 0 0 3px rgba(217, 4, 41, 0.2) !important;
 }
 
-#id_produto.bloqueado {
-    pointer-events: none;
-    background-color: #e9ecef;
+/* ==========================================================================
+   TABELAS E DATATABLES (CLEAN & LEGÍVEL)
+   ========================================================================== */
+table.dataTable {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin-top: 0.75rem !important;
 }
 
+.table thead th,
+table.dataTable thead th {
+    background-color: var(--brand-charcoal) !important;
+    color: #FFFFFF !important;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--brand-red) !important;
+    padding: 0.75rem 0.65rem !important;
+    vertical-align: middle !important;
+}
+
+.table tbody td {
+    vertical-align: middle !important;
+    color: var(--brand-charcoal);
+    font-size: 0.9rem;
+    border-top: 1px solid #EDF0F5;
+    padding: 0.65rem !important;
+}
+
+/* Status de Estoque nas Linhas (tons suaves para excelente leitura) */
+tr.row-estoque-critico {
+    background-color: #FFF5F5 !important;
+    border-left: 4px solid var(--brand-red) !important;
+}
+
+tr.row-estoque-atencao {
+    background-color: #FFFBEB !important;
+    border-left: 4px solid #D97706 !important;
+}
+
+tr.row-estoque-ok {
+    background-color: #FFFFFF !important;
+    border-left: 4px solid #10B981 !important;
+}
+
+/* Seleção de linha na tabela */
+.tableSelected,
 .table tbody tr.tableSelected td {
-    background-color: #457feb !important;
-    color: #fff !important;
+    background-color: #212529 !important;
+    color: #FFFFFF !important;
 }
 
-#toggleSenha:hover{
-    color:#000;
+.table tbody tr.tableSelected .badge {
+    border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
+/* Badges de Status */
+.badge-estoque-critico {
+    background-color: var(--brand-red);
+    color: #FFFFFF;
+    padding: 0.35em 0.65em;
+    font-size: 0.76rem;
+    border-radius: 4px;
+    font-weight: 600;
+}
 
-.footer-sistema{
+.badge-estoque-atencao {
+    background-color: #FEF3C7;
+    color: #92400E;
+    border: 1px solid #F59E0B;
+    padding: 0.35em 0.65em;
+    font-size: 0.76rem;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.badge-estoque-ok {
+    background-color: #ECFDF5;
+    color: #065F46;
+    border: 1px solid #10B981;
+    padding: 0.35em 0.65em;
+    font-size: 0.76rem;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+/* ==========================================================================
+   MODAIS E FORMULÁRIOS
+   ========================================================================== */
+.modal-content {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+}
+
+.modal-header {
+    background-color: var(--brand-black) !important;
+    color: #FFFFFF !important;
+    border-bottom: 3px solid var(--brand-red) !important;
+    padding: 0.9rem 1.25rem;
+}
+
+.modal-header .modal-title {
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: #FFFFFF !important;
+}
+
+.modal-header .close {
+    color: #FFFFFF !important;
+    opacity: 0.85;
+    text-shadow: none;
+}
+
+.modal-header .close:hover {
+    opacity: 1;
+}
+
+.form-control:focus {
+    border-color: var(--brand-charcoal);
+    box-shadow: 0 0 0 3px rgba(31, 36, 45, 0.12);
+}
+
+.bigIcon {
+    font-size: 72px;
+    color: var(--brand-red);
+}
+
+.formErrorMsg {
+    font-size: 0.82rem;
+    color: var(--brand-red);
+    font-weight: 600;
+}
+
+/* ==========================================================================
+   TELA DE LOGIN & PRIMEIRO ACESSO
+   ========================================================================== */
+.bg-login {
+    min-height: 82vh;
+    padding-top: 4vh;
+}
+
+.system-title {
+    font-weight: 800;
+    color: var(--brand-black);
+    letter-spacing: 1.5px;
+    font-size: 1.5rem;
+    text-transform: uppercase;
+}
+
+.system-title span {
+    color: var(--brand-red);
+}
+
+.login-card {
+    background: #FFFFFF;
+    border-radius: 12px;
+    border-top: 4px solid var(--brand-red);
+    box-shadow: 0 16px 40px rgba(18, 19, 22, 0.12);
+}
+
+.login-footer {
+    position: fixed;
+    bottom: 42px;
+    width: 100%;
+    color: var(--brand-gray-muted);
+    font-size: 0.82rem;
+    letter-spacing: 0.4px;
+}
+
+/* ==========================================================================
+   RODAPÉ FIXO
+   ========================================================================== */
+.footer-sistema {
     position: fixed;
     bottom: 0;
     width: 100%;
-    height: 35px;
-    background-color: #0b6b3a;
-    color: white;
-    font-size: 13px;
+    height: 36px;
+    background-color: var(--brand-black);
+    border-top: 2px solid var(--brand-red);
+    color: #D1D5DB;
+    font-size: 12.5px;
     z-index: 1000;
 }
 
-.footer-container{
+.footer-container {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -169,31 +486,35 @@ html, body {
     padding: 0 15px;
 }
 
-.footer-logo{
-    margin-right: 10px;
-}
-
-.footer-logo img{
-    height: 20px;
-}
-
-.footer-text{
+.footer-text {
     flex: 1;
     text-align: center;
+    letter-spacing: 0.3px;
 }
 
-#filtroProcesso{
-    color:#043573;
-    font-weight:500;
+/* ==========================================================================
+   CLASSES LEGADAS DO PCP / PRODUÇÃO
+   ========================================================================== */
+.termico { background-color: #ffe5cc !important; }
+.geral { background-color: #fff9cc !important; }
+.amostra { background-color: #e9ecef !important; }
+.nao-conforme { background-color: #ffd6d6 !important; }
+
+.select2-results__options {
+    max-height: 200px !important;
+    overflow-y: auto !important;
 }
 
-.btn-custom {
-    background-color: #6f42c1; /* roxo, por exemplo */
-    color: #fff;
-    border: none;
+#id_produto.bloqueado {
+    pointer-events: none;
+    background-color: #e9ecef;
 }
 
-.btn-custom:hover {
-    background-color: #59359c;
-    color: #fff;
+#toggleSenha:hover {
+    color: var(--brand-red) !important;
+}
+
+#filtroProcesso {
+    color: var(--brand-charcoal);
+    font-weight: 600;
 }
