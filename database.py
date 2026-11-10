@@ -11,11 +11,11 @@ load_dotenv()
 
 class postgresDatabase():
     def __init__(self, user=None, password=None, host=None, dbname=None, port=None):
-        # 1. Configura as credenciais (Prioridade: .env > Padrão)
-        self.user = user or os.getenv('DB_USER', 'postgres')
-        self.password = password or os.getenv('DB_PASS', 'postgres')
+        # 1. Configura as credenciais (Prioridade: .env DB_* > .env POSTGRES_* > Padrão)
+        self.user = user or os.getenv('DB_USER') or os.getenv('POSTGRES_USER', 'postgres')
+        self.password = password or os.getenv('DB_PASS') or os.getenv('POSTGRES_PASSWORD', 'postgres')
         self.host = host or os.getenv('DB_HOST', 'localhost')
-        self.dbname = dbname or os.getenv('DB_NAME', 'db_ARO')
+        self.dbname = dbname or os.getenv('DB_NAME') or os.getenv('POSTGRES_DB', 'db_ARO')
         self.port = port or os.getenv('DB_PORT', '5432')
         
         self.lastError = None

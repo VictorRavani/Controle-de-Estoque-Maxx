@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # 1. O Banco de Dados (PostgreSQL)
   db:
@@ -9,9 +7,9 @@ services:
     # Ele lê as senhas direto do seu arquivo .env
     env_file:
       - .env
-    # Mapeia a porta do banco para você poder acessar pelo DBeaver/pgAdmin no Windows
+    # Mapeia a porta do banco apenas para localhost (127.0.0.1), protegendo o servidor contra bots externos na internet
     ports:
-      - "5440:5432"
+      - "127.0.0.1:5440:5432"
     # Cria um volume para que os dados não sumam se o contêiner reiniciar
     volumes:
       - postgres_data:/var/lib/postgresql/data
